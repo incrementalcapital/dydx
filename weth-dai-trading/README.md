@@ -15,12 +15,13 @@ To get these scripts working:
 Essentially, these steps would look something like this:
 
 ```bash
-python3 --version
-git clone https://github.com/munair/dydx.git
-mv example-credentials.py credentials.py
-vi credentials.py
-pip3 --version || sudo apt install python3-pip -y
-pip3 install dydx-python
+sudo apt update # update apt
+python3 --version # confirm that python3 is installed (it is by default on Ubuntu Server 18.04 LTS)
+git clone https://github.com/munair/dydx.git # download repository
+mv example-credentials.py credentials.py # prepare credentials
+vi credentials.py # insert private key
+pip3 --version || sudo apt install python3-pip -y # check for pip3 and install it if not found
+pip3 install dydx-python # install dydx libraries
 ```
 
 ## Usage
