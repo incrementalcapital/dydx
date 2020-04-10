@@ -37,3 +37,12 @@ py long-eth-perpetually.py
 ```
 
 **Note:** for best performance, suppressing the creation of Python's cache directory (__pycache__) is *not* recommended.
+
+## Updates
+
+To make updates to the code, use the git. Specify a username and email:
+
+```
+git config --global user.email "incrementalcapital@gmail.com"
+git config --global user.name "incremental capital"
+```
