@@ -8,7 +8,7 @@ import dydx.util as utils
 from credentials import client
 
 
-# Get trades created by my account for both sides of the orderbook
+# Get trades created by my account
 my_trades = client.get_my_trades(
     market=['WETH-DAI'],
     limit=None,  # optional
