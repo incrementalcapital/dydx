@@ -130,8 +130,12 @@ while Decimal(presentask) > Decimal(triggerask):
 logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than the trigger price: {triggerask:10.4f}' )
 
 
-# Get dYdX index price for ETH
+# Get dYdX index price for ETH and DAI
+# Both values are returned in US dollar terms
 # dYdX uses price oracles for DAI and ETH
+oracleprice = client.eth.get_oracle_price( wethassetid )
+normalprice = Decimal(oracleprice) * Decimal( 10**(wethdecimals) )
+ethusdprice = Decimal(normalprice)
 oracleprice = client.eth.get_oracle_price( daiassetid )
 normalprice = Decimal(oracleprice) * Decimal( 10**(daidecimals) )
 daiusdprice = Decimal(normalprice)
@@ -141,15 +145,15 @@ daiusdprice = Decimal(normalprice)
 balances = client.eth.get_my_balances()
 # Determine overcollateralized collateral (USDC asset balance in DAI terms)
 # And DAI balance to determine the maximum amount of DAI borrowable
-ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) / Decimal(daiusdprice)
+ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(ethusdprice) / Decimal(daiusdprice)
 usdbalance = Decimal( balances[usdcassetid] / (10**usdcdecimals) ) / Decimal(daiusdprice)
 daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
 # Determine the DAI value of the dYdX account and the margin that affords
-# Calculate the maximum permissable debt and additional allowed debt (all in DAI terms)
+# Calculate the maximum additional debt allowed (in DAI terms)
 dydxaccount = Decimal(ethbalance) + Decimal(usdbalance) + Decimal(daibalance)
 totalmargin = Decimal(dydxaccount) / Decimal(minimumcollateralization)
 maximumdebt = Decimal(totalmargin) * Decimal(maximumleverage)
-logger.info ( f'This dYdX account has a balance of {dydxaccount:10.4f} [in DAI terms].')
+logger.info ( f'This dYdX account has a balance of {dydxaccount:12.4f} [in DAI terms].')
 logger.info ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates debt].')
 logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
 logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
@@ -162,7 +166,7 @@ logger.info ( f'Therefore, this dYdX accound can borrow up to {maximumdebt:10.4f
 # Based on the debt remaining and present market values
 bookpricing = bestprices( 'WETH-DAI', daiquotetick )
 greatestbid = bookpricing[3]
-bidquantity = Decimal(alloweddebt) / Decimal(greatestbid)
+bidquantity = Decimal(maximumdebt) / Decimal(greatestbid)
 # Submit the order to BUY ETH
 placed_bid = client.place_order(
     market=consts.PAIR_WETH_DAI,
