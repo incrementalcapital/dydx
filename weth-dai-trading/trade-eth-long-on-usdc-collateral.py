@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
+
+import os
 import json
 import time
+import logging
 from decimal import Decimal
 
 from dydx.client import Client
@@ -11,21 +14,53 @@ import dydx.util as utils
 from credentials import client
 
 
+# Create custom logger
+logger = logging.getLogger('tradelogger')
+logger.setLevel(logging.DEBUG)
+script = os.path.splitext(__file__)
+outlog = '/tmp/' + script[0] + '.out'
+errlog = '/tmp/' + script[0] + '.err'
+# Create console and file handlers
+consolehandler = logging.StreamHandler()
+fileouthandler = logging.FileHandler(outlog)
+fileerrhandler = logging.FileHandler(errlog)
+consolehandler.setLevel(logging.INFO)
+fileouthandler.setLevel(logging.DEBUG)
+fileerrhandler.setLevel(logging.WARNING)
+# Create formatters and add it to handlers
+consoleformat = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+fileoutformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s')
+fileerrformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s  [from %(name)s]')
+consolehandler.setFormatter(consoleformat)
+fileouthandler.setFormatter(fileoutformat)
+fileerrhandler.setFormatter(fileerrformat)
+# Add handlers to the logger
+logger.addHandler(consolehandler)
+logger.addHandler(fileouthandler)
+logger.addHandler(fileerrhandler)
+
+
 # Define the return on assets and price drop (pricetrigger) required for bidding
 # Also define a stop limit ask and a stop market ask (just in case the price crashes)
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 pricetrigger = Decimal( "0.99" )
+logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
 requiredreturn = Decimal( "1.01" )
+logger.info ( f'requiredreturn = {100*(requiredreturn-1):5.2f}%' )
 # Submit an ask immediately after the bid is filled.
 stoplimitask = Decimal( "0.99" )
+logger.info ( f'stoplimitask = {100*stoplimitask:5.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
 stopmarketask = Decimal( "0.98" )
+logger.info ( f'stopmarketask = {100*stopmarketask:5.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop market is triggered.
 maximumleverage = Decimal( "5" )
+logger.info ( f'maximumleverage = {maximumleverage:5.2f}X' )
 # 5X constants established by dYdX (note that it is 4X for a SHORT)
 minimumcollateralization = Decimal( "1.25" )
+logger.info ( f'minimumcollateralization = {100*minimumcollateralization:5.2f}%' )
 # dYdX accounts must be overcollateralized at the ratio of 125%.
 # Note that positions are liquidated at 115%.
 # However, the target collateralization should reflect risk tolerance.
@@ -72,22 +107,27 @@ daidecimals = markets["markets"]["WETH-DAI"]["quoteCurrency"]["decimals"]
 daiassetid = markets["markets"]["WETH-DAI"]["quoteCurrency"]["soloMarketId"]
 usdcdecimals = markets["markets"]["WETH-USDC"]["quoteCurrency"]["decimals"]
 usdcassetid = markets["markets"]["WETH-USDC"]["quoteCurrency"]["soloMarketId"]
+wethdecimals = markets["markets"]["WETH-DAI"]["baseCurrency"]["decimals"]
+wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 
 
-# Get best ask
-# Loop until the ask drops below the trigger price
+# Get best ask and determine price trigger
 bookprices = bestprices( 'WETH-DAI', daiquotetick )
-presentask = bookprices[0]
-
+presentask = Decimal( bookprices[0] )
 triggerask = Decimal( presentask ) * Decimal ( pricetrigger )
-
+logger.info ( f'The lowest ask in the orderbook is: {presentask:10.4f} DAI/ETH' )
+logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below: {triggerask:10.4f} DAI/ETH' )
+logger.info ( f'Enter a loop to monitor the market...' )
+# Loop until the ask drops below the trigger price
 while Decimal(presentask) > Decimal(triggerask):
+    logger.debug ( f'{presentask:10.4f} > {triggerask:10.4f}' )
     # Sleep ten seconds before checking updating the present price
     time.sleep(10)
-
+    # Update prices
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
-    presentask = bookprices[0]
+    presentask = Decimal(bookprices[0])
     # If the present price is below the trigger price this loop ends
+logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than the trigger price: {triggerask:10.4f}' )
 
 
 # Get dYdX index price for ETH
@@ -101,18 +141,21 @@ daiusdprice = Decimal(normalprice)
 balances = client.eth.get_my_balances()
 # Determine overcollateralized collateral (USDC asset balance in DAI terms)
 # And DAI balance to determine the maximum amount of DAI borrowable
+ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) / Decimal(daiusdprice)
 usdbalance = Decimal( balances[usdcassetid] / (10**usdcdecimals) ) / Decimal(daiusdprice)
 daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
-
-
-# Determine the total margin, the maximum allowable debt of the dydx account
-# And permissable additional debt (all in DAI terms)
-totalmargin = Decimal(usdbalance) / Decimal(minimumcollateralization)
+# Determine the DAI value of the dYdX account and the margin that affords
+# Calculate the maximum permissable debt and additional allowed debt (all in DAI terms)
+dydxaccount = Decimal(ethbalance) + Decimal(usdbalance) + Decimal(daibalance)
+totalmargin = Decimal(dydxaccount) / Decimal(minimumcollateralization)
 maximumdebt = Decimal(totalmargin) * Decimal(maximumleverage)
-if daibalance < 0:
-    alloweddebt = Decimal(maximumdebt) + Decimal(daibalance)
-else:
-    alloweddebt = Decimal(maximumdebt)
+logger.info ( f'This dYdX account has a balance of {dydxaccount:10.4f} [in DAI terms].')
+logger.info ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates debt].')
+logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
+logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
+logger.info ( f'dYdX allows {100/minimumcollateralization:5.2f}% for trades on margin.')
+logger.info ( f'Amounts to {totalmargin:5.2f} DAI at {maximumleverage:5.2f}X leverage.')
+logger.info ( f'Therefore, this dYdX accound can borrow up to {maximumdebt:10.4f} DAI.')
 
 
 # Determine most competitive bid price and amount
@@ -129,9 +172,9 @@ placed_bid = client.place_order(
     fillOrKill=False,
     postOnly=False
 )
-# Display order information
+# Log order information to console
 jsondata = json.dumps( placed_bid, sort_keys=True, indent=4, separators=(',', ': ') )
-print ( jsondata )
+logger.info ( jsondata )
 
 
 # Loop until the bid is filled
@@ -145,12 +188,13 @@ while True:
         limit=1
     )
     if my_fills["fills"][0]["orderId"] == placed_bid["order"]["id"]:
+        logger.info ( 'Order %s was filled.', placed_bid["order"]["id"])
         break
 
 
 # Place ask to close the position opened by the bid
 # that returns 100 basis points
-askprice = Decimal( greatestbid ) * requiredreturn
+askprice = Decimal( greatestbid ) * Decimal( requiredreturn )
 quantity = bidquantity
 # Create order to SELL ETH
 placed_ask = client.place_order(
@@ -163,24 +207,35 @@ placed_ask = client.place_order(
 )
 # Display order information
 jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
-print ( jsondata )
+logger.info ( jsondata )
 
+
+# Define stop market and stop limit sell order prices
+sellthreshold = Decimal( greatestbid ) * Decimal( stoplimitask )
+dumpthreshold = Decimal( greatestbid ) * Decimal( stopmarketask )
+logger.info( f'From this point forth, if the submitted ask is not filled and the price drops below {sellthreshold:10.4f} submit a stop limit order.')
+logger.info( f'From this point forth, if the submitted ask is not filled and the price drops below {dumpthreshold:10.4f} issue a stop market order.')
+# Enter loop
 while True:
     # Check the status of the submitted ask
     submittedask = client.get_order( orderId=placed_ask["order"]["id"] )
     if submittedask["order"]["status"] == "FILLED":
         # Exit: End the loop and exit.
-        print ("Order ", submittedask["order"]["id"], " was filled at: ", submittedask["order"]["price"], " DAI/ETH.")
+        logger.info ( f'Order {submittedask["order"]["id"]} was filled at: {submittedask["order"]["price"]} DAI/ETH.')
         break
     else:
         # Sleep
         # Then check price
         time.sleep(5)
         bookprices = bestprices( 'WETH-DAI', daiquotetick )
-        bookmarket = bookprices[1]
-        limitprice = bookprices[2]
+        bookmarket = Decimal( bookprices[1] )
+        limitprice = Decimal( bookprices[2] )
+        logger.debug ( f'The highest bid in the orderbook is: {bookmarket:10.4f}' )
+        logger.debug ( f'The most competitive ask that you could post to the orderbook is: {limitprice:10.4f}' )
+
         # If the present price is below the trigger price this loop ends
-        if Decimal( bookmarket ) < Decimal( greatestbid ) * Decimal( stopmarketask ):
+        if Decimal( bookmarket ) < Decimal( dumpthreshold ):
+            logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop market sell threshold: {dumpthreshold:10.4f}')
             # Create order to SELL ETH
             placed_ask = client.place_order(
                 market=consts.PAIR_WETH_DAI,
@@ -192,16 +247,17 @@ while True:
             )
             # Display order information
             jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
-            print ( jsondata )
+            logger.info ( jsondata )
             # Cancel the previously submitted ask then exit the loop.
-            print ( "Cancelling order: ", submittedask["order"]["id"] )
+            logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
             canceledask = client.cancel_order( hash=my_order["order"]["id"] )
             # Display order cancel information
             jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
-            print ( jsondata )
-            # exit loop
+            logger.info ( jsondata )
+            # Exit loop
             break
-        elif Decimal( bookmarket ) < Decimal( greatestbid ) * Decimal( stoplimitask ):
+        elif Decimal( dumpthreshold ) < Decimal( bookmarket ) < Decimal( sellthreshold ):
+            logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop limit sell threshold: {sellthreshold:10.4f}')
             # Create order to SELL ETH
             placed_ask = client.place_order(
                 market=consts.PAIR_WETH_DAI,
@@ -213,12 +269,12 @@ while True:
             )
             # Display order information
             jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
-            print ( jsondata )
+            logger.info ( jsondata )
             # Cancel the previously submitted ask then exit the loop.
-            print ( "Cancelling order: ", submittedask["order"]["id"] )
+            logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
             canceledask = client.cancel_order( hash=my_order["order"]["id"] )
             # Display order cancel information
             jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
-            print ( jsondata )
-            # exit loop
+            logger.info ( jsondata )
+            # Exit loop
             break
