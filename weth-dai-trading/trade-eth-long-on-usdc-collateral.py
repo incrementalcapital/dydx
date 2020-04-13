@@ -167,14 +167,14 @@ logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates 
 logger.info ( f'dYdX allows {100/minimumcollateralization:5.2f}% for trades on margin.')
 logger.info ( f'The maximum debt presently available is presently {maximumdebt:10.4f}.')
 logger.info ( f'Thanks the {maximumleverage:5.2f}X leverage on {totalmargin:5.2f} DAI.')
-logger.info ( f'So, this account may access {availabledebt:10.4f} DAI additional debt.')
+logger.info ( f'The debt available to this dYdX account is: {availabledebt:10.4f} DAI.')
 
 
 # Determine most competitive bid price and amount
 # Based on the debt remaining and present market values
 bookpricing = bestprices( 'WETH-DAI', daiquotetick )
 greatestbid = bookpricing[3]
-bidquantity = Decimal(maximumdebt) / Decimal(greatestbid)
+bidquantity = Decimal(availabledebt) / Decimal(greatestbid)
 # Submit the order to BUY ETH
 placed_bid = client.place_order(
     market=consts.PAIR_WETH_DAI,
