@@ -143,7 +143,7 @@ balances = client.eth.get_my_balances()
 # Determine overcollateralized collateral (USDC asset balance in DAI terms)
 # And DAI balance to determine the maximum amount of DAI borrowable
 # Do not use the Oracle Price for ETH because it is inaccurate for present debt calculations
-ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(presentask) / Decimal(daiusdprice)
+ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(presentask)
 usdbalance = Decimal( balances[usdcassetid] / (10**usdcdecimals) ) / Decimal(daiusdprice)
 daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
 # Determine the DAI value of the dYdX account and the margin that affords
