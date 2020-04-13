@@ -130,13 +130,8 @@ while Decimal(presentask) > Decimal(triggerask):
 logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than the trigger price: {triggerask:10.4f}' )
 
 
-# Get dYdX index price for ETH and DAI
-# Both values are returned in US dollar terms
-# dYdX uses price oracles for DAI and ETH
-oracleprice = client.eth.get_oracle_price( wethassetid )
-normalprice = Decimal(oracleprice) * Decimal( 10**(wethdecimals) )
-ethusdprice = Decimal(normalprice)
-logger.debug( f'The oracles says 1 ETH is: {ethusdprice:10.4f} US dollars')
+# Get dYdX index price for DAI returned in US dollar terms
+# dYdX uses price oracles for DAI
 oracleprice = client.eth.get_oracle_price( daiassetid )
 normalprice = Decimal(oracleprice) * Decimal( 10**(daidecimals) )
 daiusdprice = Decimal(normalprice)
