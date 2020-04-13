@@ -136,9 +136,11 @@ logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than t
 oracleprice = client.eth.get_oracle_price( wethassetid )
 normalprice = Decimal(oracleprice) * Decimal( 10**(wethdecimals) )
 ethusdprice = Decimal(normalprice)
+logger.debug( f'The oracles says 1 ETH is: {ethusdprice:10.4f} US dollars')
 oracleprice = client.eth.get_oracle_price( daiassetid )
 normalprice = Decimal(oracleprice) * Decimal( 10**(daidecimals) )
 daiusdprice = Decimal(normalprice)
+logger.debug( f'The oracles says 1 DAI is: {daiusdprice:10.4f} US dollars')
 
 
 # Get dYdX account balances
