@@ -167,7 +167,7 @@ while True:
     logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
     logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
     logger.info ( f'dYdX allows {100/minimumcollateralization:5.2f}% for trades on margin.')
-    logger.info ( f'The maximum debt presently available is presently {maximumdebt:10.4f}.')
+    logger.info ( f'The maximum possible liability allowed is now {maximumdebt:10.4f} DAI.')
     logger.info ( f'Thanks the {maximumleverage:5.2f}X leverage on {totalmargin:5.2f} DAI.')
     logger.info ( f'The debt available to this dYdX account is: {availabledebt:10.4f} DAI.')
 
