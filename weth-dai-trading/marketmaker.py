@@ -193,15 +193,16 @@ while True:
 
     # Loop until the bid is filled
     while True:
+        # Give a status update on the get_orderbook
+        orderbookpricing = bestprices( 'WETH-DAI', daiquotetick )
+        topask = orderbookpricing[0]
+        topbid = orderbookpricing[1]
+        logger.debug( f'Submitted a bid for {bidquantity} ETH at {greatestbid}. The best bid now is {topbid} and the best ask is {topask}.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
-
         # Get fills
-        my_fills = client.get_my_fills(
-            market=['WETH-DAI'],
-            limit=1
-        )
-        if my_fills["fills"][0]["orderId"] == placed_bid["order"]["id"]:
+        lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
+        if lastfill["fills"][0]["orderId"] == placed_bid["order"]["id"]:
             logger.info ( 'Order %s was filled.', placed_bid["order"]["id"])
             break
 
