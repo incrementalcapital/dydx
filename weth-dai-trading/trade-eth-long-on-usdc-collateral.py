@@ -151,13 +151,23 @@ daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
 dydxaccount = Decimal(ethbalance) + Decimal(usdbalance) + Decimal(daibalance)
 totalmargin = Decimal(dydxaccount) / Decimal(minimumcollateralization)
 maximumdebt = Decimal(totalmargin) * Decimal(maximumleverage)
+# Define pertinent DAI liabilities
+if Decimal( daibalance ) < 0:
+    liabilities = abs( daibalance )
+else:
+    liabilities = 0
+logger.debug( f'This dYdX account has DAI liabilities of: {liabilities:10.4f} DAI')
+# Determine the available debt accessible to the dYdX account
+availabledebt = Decimal(maximumdebt) - Decimal(liabilities)
+# Note: going long on ETH with DAI means having to remove the existing DAI liabilities in the calculation
 logger.info ( f'This dYdX account has a balance of {dydxaccount:10.4f} [in DAI terms].')
 logger.info ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates debt].')
 logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
 logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
 logger.info ( f'dYdX allows {100/minimumcollateralization:5.2f}% for trades on margin.')
-logger.info ( f'Amounts to {totalmargin:5.2f} DAI at {maximumleverage:5.2f}X leverage.')
-logger.info ( f'Therefore, this dYdX accound can borrow up to {maximumdebt:10.4f} DAI.')
+logger.info ( f'The maximum debt presently available is presently {maximumdebt:10.4f}.')
+logger.info ( f'Thanks the {maximumleverage:5.2f}X leverage on {totalmargin:5.2f} DAI.')
+logger.info ( f'So, this account may access {availabledebt:10.4f} DAI additional debt.')
 
 
 # Determine most competitive bid price and amount
