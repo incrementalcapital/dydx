@@ -142,7 +142,8 @@ logger.debug( f'The oracles says 1 DAI is: {daiusdprice:10.4f} US dollars')
 balances = client.eth.get_my_balances()
 # Determine overcollateralized collateral (USDC asset balance in DAI terms)
 # And DAI balance to determine the maximum amount of DAI borrowable
-ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(ethusdprice) / Decimal(daiusdprice)
+# Do not use the Oracle Price for ETH because it is inaccurate for present debt calculations
+ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(presentask) / Decimal(daiusdprice)
 usdbalance = Decimal( balances[usdcassetid] / (10**usdcdecimals) ) / Decimal(daiusdprice)
 daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
 # Determine the DAI value of the dYdX account and the margin that affords
@@ -150,7 +151,7 @@ daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
 dydxaccount = Decimal(ethbalance) + Decimal(usdbalance) + Decimal(daibalance)
 totalmargin = Decimal(dydxaccount) / Decimal(minimumcollateralization)
 maximumdebt = Decimal(totalmargin) * Decimal(maximumleverage)
-logger.info ( f'This dYdX account has a balance of {dydxaccount:12.4f} [in DAI terms].')
+logger.info ( f'This dYdX account has a balance of {dydxaccount:10.4f} [in DAI terms].')
 logger.info ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates debt].')
 logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
 logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
