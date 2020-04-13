@@ -127,7 +127,7 @@ while Decimal(presentask) > Decimal(triggerask):
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
     presentask = Decimal(bookprices[0])
     # If the present price is below the trigger price this loop ends
-logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than the trigger price: {triggerask:10.4f}' )
+logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than (or equals) the trigger price: {triggerask:10.4f}' )
 
 
 # Get dYdX index price for DAI returned in US dollar terms
