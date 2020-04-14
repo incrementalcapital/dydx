@@ -248,8 +248,7 @@ while True:
             bookprices = bestprices( 'WETH-DAI', daiquotetick )
             bookmarket = Decimal( bookprices[1] )
             limitprice = Decimal( bookprices[2] )
-            logger.debug ( f'The highest bid in the orderbook is {bookmarket-sellthreshold:10.4f} DAI above the stop limit {sellthreshold:10.4f}, \
-                                                             and {bookmarket-dumpthreshold:10.4f} DAI above the stop market {dumpthreshold:10.4f}.' )
+            logger.debug ( f'The highest bid in the orderbook is {bookmarket-sellthreshold:10.4f} DAI above the stop limit {sellthreshold:10.4f}, and {bookmarket-dumpthreshold:10.4f} DAI above the stop market {dumpthreshold:10.4f}.' )
 
             # If the present price is below the trigger price this loop ends
             if Decimal( bookmarket ) < Decimal( dumpthreshold ):
