@@ -252,7 +252,7 @@ while True:
             if Decimal( bookmarket ) < Decimal( dumpthreshold ):
                 logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop market sell threshold: {dumpthreshold:10.4f}')
                 # Create order to SELL ETH
-                placed_ask = client.place_order(
+                placed_stop = client.place_order(
                     market=consts.PAIR_WETH_DAI,
                     side=consts.SIDE_SELL,
                     amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
@@ -261,11 +261,11 @@ while True:
                     postOnly=False
                 )
                 # Display order information
-                jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
+                jsondata = json.dumps( placed_stop, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.info ( jsondata )
                 # Cancel the previously submitted ask then exit the loop.
                 logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
-                canceledask = client.cancel_order( hash=my_order["order"]["id"] )
+                canceledask = client.cancel_order( hash=placed_ask["order"]["id"] )
                 # Display order cancel information
                 jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.info ( jsondata )
@@ -274,7 +274,7 @@ while True:
             elif Decimal( dumpthreshold ) < Decimal( bookmarket ) < Decimal( sellthreshold ):
                 logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop limit sell threshold: {sellthreshold:10.4f}')
                 # Create order to SELL ETH
-                placed_ask = client.place_order(
+                placed_stop = client.place_order(
                     market=consts.PAIR_WETH_DAI,
                     side=consts.SIDE_SELL,
                     amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
@@ -283,11 +283,11 @@ while True:
                     postOnly=False
                 )
                 # Display order information
-                jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
+                jsondata = json.dumps( placed_stop, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.info ( jsondata )
                 # Cancel the previously submitted ask then exit the loop.
                 logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
-                canceledask = client.cancel_order( hash=my_order["order"]["id"] )
+                canceledask = client.cancel_order( hash=placed_ask["order"]["id"] )
                 # Display order cancel information
                 jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.info ( jsondata )
