@@ -48,7 +48,7 @@ logger.addHandler(fileerrhandler)
 pricetrigger = Decimal( "0.99" )
 logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
-requiredreturn = Decimal( "1.01" )
+requiredreturn = Decimal( "1.007" )
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):5.2f}%' )
 # Submit an ask immediately after the bid is filled.
 stoplimitask = Decimal( "0.99" )
