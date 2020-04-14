@@ -113,6 +113,8 @@ wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 
 # Start market maker
 while True:
+    logger.info( f'\n\n\nBegin providing liquidity for those shorting ETH...')
+
     # Get best ask and determine price trigger
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
     presentask = Decimal( bookprices[0] )
@@ -303,3 +305,5 @@ while True:
     if Decimal(daibalance) > 2:
         withdrawhash = client.eth.solo.withdraw_to_zero(market=consts.MARKET_DAI)
         receipt = client.eth.get_receipt(withdrawhash)
+
+    logger.info( f'End of liquidity provision.\n\n\n')
