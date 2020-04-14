@@ -296,6 +296,8 @@ while True:
                 # Exit loop
                 break
 
+    # Sleep ten seconds
+    time.sleep(10)
 
     # Withdraw DAI gains if any
     # Check dYdX DAI account balance
