@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+
+import json
+from web3 import Web3
 from decimal import Decimal
 
 from dydx.client import Client
@@ -13,14 +16,14 @@ from credentials import client
 #
 # Is not required for WETH
 
-depositamount = Decimal("0.0001")
+depositamount = Decimal( "0.0001" )
 
 # Deposit ETH
 tx_hash = client.eth.deposit(
   market=consts.MARKET_WETH,
-  wei=utils.token_to_wei(depositamount, consts.MARKET_WETH)
+  wei=utils.token_to_wei( depositamount, consts.MARKET_WETH )
 )
-receipt = client.eth.get_receipt(tx_hash)
-
-# Display deposit confirmation
-print ( receipt )
+# Display deposit information
+receipt = client.eth.get_receipt( tx_hash )
+web3out = Web3.toJSON( receipt )
+print( web3out )
