@@ -5,6 +5,7 @@ import os
 import json
 import time
 import logging
+from web3 import Web3
 from decimal import Decimal
 
 from dydx.client import Client
@@ -303,7 +304,13 @@ while True:
     daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
     # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
     if Decimal(daibalance) > 2:
-        withdrawhash = client.eth.solo.withdraw_to_zero(market=consts.MARKET_DAI)
-        receipt = client.eth.get_receipt(withdrawhash)
+        withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
+        # Display deposit confirmation
+        logger.info ( f'Depositing {daibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+        receipt = client.eth.get_receipt( withdrawalhash )
+        web3out = Web3.toJSON( receipt )
+        logger.debug ( web3out )
+        logger.info ( 'Done.' )
+
 
     logger.info( f'End of liquidity provision.\n\n\n' )
