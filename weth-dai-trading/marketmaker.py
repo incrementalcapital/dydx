@@ -295,6 +295,11 @@ while True:
                 break
 
 
-    # Withdraw Profits
-    withdrawhash = client.eth.solo.withdraw_to_zero(market=consts.MARKET_DAI)
-    receipt = client.eth.get_receipt(withdrawhash)
+    # Withdraw DAI gains if any
+    # Check dYdX DAI account balance
+    balances = client.eth.get_my_balances()
+    daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
+    # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
+    if Decimal(daibalance) > 2:
+        withdrawhash = client.eth.solo.withdraw_to_zero(market=consts.MARKET_DAI)
+        receipt = client.eth.get_receipt(withdrawhash)
