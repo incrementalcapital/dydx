@@ -293,3 +293,8 @@ while True:
                 logger.info ( jsondata )
                 # Exit loop
                 break
+
+
+    # Withdraw Profits
+    withdrawhash = client.eth.solo.withdraw_to_zero(market=consts.MARKET_DAI)
+    receipt = client.eth.get_receipt(withdrawhash)
