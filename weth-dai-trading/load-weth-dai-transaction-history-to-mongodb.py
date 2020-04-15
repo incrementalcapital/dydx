@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+
 import json
 import pymongo
 
@@ -7,8 +8,9 @@ import dydx.constants as consts
 import dydx.util as utils
 
 from credentials import client
-from credentials import tradingaccount
 from dbconnection import dbclient
+from dbconnection import tradingaccount
+
 
 # Get trades created by my account
 wethdaitrades = client.get_my_trades(
