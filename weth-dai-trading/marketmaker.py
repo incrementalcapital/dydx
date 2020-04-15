@@ -46,7 +46,7 @@ logger.addHandler(fileerrhandler)
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 logger.info( f'\n\n\nDefine execution parameters...' )
-pricetrigger = Decimal( "0.99" )
+pricetrigger = Decimal( "0.995" )
 logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
 requiredreturn = Decimal( "1.007" )
