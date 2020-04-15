@@ -45,7 +45,7 @@ logger.addHandler(fileerrhandler)
 # Also define a stop limit ask and a stop market ask (just in case the price crashes)
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
-logger.info( f'\n\n\nDefine execution parameters...' )
+logger.info( f'Define execution parameters...' )
 pricetrigger = Decimal( "0.995" )
 logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
@@ -63,7 +63,7 @@ logger.info ( f'maximumleverage = {maximumleverage:5.2f}X' )
 # 5X constants established by dYdX (note that it is 4X for a SHORT)
 minimumcollateralization = Decimal( "1.25" )
 logger.info ( f'minimumcollateralization = {100*minimumcollateralization:5.2f}%' )
-logger.info( f'Execution parameters defined.\n\n\n' )
+logger.info( f'Execution parameters defined.\n\n\n\n' )
 # dYdX accounts must be overcollateralized at the ratio of 125%.
 # Note that positions are liquidated at 115%.
 # However, the target collateralization should reflect risk tolerance.
@@ -116,7 +116,7 @@ wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 
 # Start market maker
 while True:
-    logger.info( f'\n\n\nBegin providing liquidity for those shorting ETH...' )
+    logger.info( f'Begin providing liquidity for those shorting ETH...' )
 
     # Get best ask and determine price trigger
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
@@ -316,4 +316,4 @@ while True:
         logger.info ( 'Done.' )
 
 
-    logger.info( f'End of liquidity provision.\n\n\n' )
+    logger.info( f'End of liquidity provision.\n\n\n\n' )
