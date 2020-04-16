@@ -1,11 +1,8 @@
 #!/usr/bin/env python3
 
 
-import os
 import json
 import time
-import boto3
-import logging
 from web3 import Web3
 from decimal import Decimal
 
@@ -13,37 +10,9 @@ from dydx.client import Client
 import dydx.constants as consts
 import dydx.util as utils
 
+from logger import logger
+from messenger import alert
 from credentials import client
-
-
-# Create custom logger
-logger = logging.getLogger('tradelogger')
-logger.setLevel(logging.DEBUG)
-script = os.path.splitext(__file__)
-outlog = '/tmp/' + script[0] + '.out'
-errlog = '/tmp/' + script[0] + '.err'
-# Create console and file handlers
-consolehandler = logging.StreamHandler()
-fileouthandler = logging.FileHandler(outlog)
-fileerrhandler = logging.FileHandler(errlog)
-consolehandler.setLevel(logging.INFO)
-fileouthandler.setLevel(logging.DEBUG)
-fileerrhandler.setLevel(logging.WARNING)
-# Create formatters and add it to handlers
-consoleformat = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-fileoutformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s')
-fileerrformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s  [from %(name)s]')
-consolehandler.setFormatter(consoleformat)
-fileouthandler.setFormatter(fileoutformat)
-fileerrhandler.setFormatter(fileerrformat)
-# Add handlers to the logger
-logger.addHandler(consolehandler)
-logger.addHandler(fileouthandler)
-logger.addHandler(fileerrhandler)
-
-
-# Create AWS SNS client
-snsclient = boto3.client('sns')
 
 
 # Define the return on assets and price drop (pricetrigger) required for bidding
@@ -74,15 +43,6 @@ logger.info( f'Execution parameters defined.\n\n\n\n' )
 # However, the target collateralization should reflect risk tolerance.
 # For example, a cautious trader may feel comfortable using a target of 150%.
 # Or the trader may prefer to be overcollateralized at 200% during periods of high volatility.
-
-
-# Define alert function
-def alert( message ):
-    # Send message via SMS.
-    snsresponse = snsclient.publish( PhoneNumber='+15108045618', Message=message )
-    responseout = json.dumps( snsresponse, sort_keys=True, indent=4, separators=(',', ': ') )
-    logger.debug ( responseout )
-    # Log SMS execution details
 
 
 # Define best price function
@@ -131,7 +91,7 @@ wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 # Start market maker
 while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
-    alert( 'Initiating market making.' )
+    smsalert( 'Initiating market making.' )
 
     # Get best ask and determine price trigger
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
@@ -224,7 +184,7 @@ while True:
         lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
         if lastfill["fills"][0]["orderId"] == placed_bid["order"]["id"]:
             logger.info ( 'Order %s was filled.', placed_bid["order"]["id"])
-            alert( f'Bid {greatestbid} DAI for {bidquantity} ETH')
+            smsalert( f'Bid {greatestbid} DAI for {bidquantity} ETH')
             break
 
 
@@ -322,7 +282,7 @@ while True:
     balances = client.eth.get_my_balances()
     newdaibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
     logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance} DAI.' )
-    alert( f'DAI balance changed by {newdaibalance - daibalance} DAI because of the last trade.' )
+    smsalert( f'DAI balance changed by {newdaibalance - daibalance} DAI because of the last trade.' )
     # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
     if Decimal(newdaibalance) > 2:
         withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
