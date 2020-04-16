@@ -4,6 +4,7 @@
 import os
 import json
 import time
+import boto3
 import logging
 from web3 import Web3
 from decimal import Decimal
@@ -41,6 +42,10 @@ logger.addHandler(fileouthandler)
 logger.addHandler(fileerrhandler)
 
 
+# Create AWS SNS client
+snsclient = boto3.client('sns')
+
+
 # Define the return on assets and price drop (pricetrigger) required for bidding
 # Also define a stop limit ask and a stop market ask (just in case the price crashes)
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
@@ -69,6 +74,15 @@ logger.info( f'Execution parameters defined.\n\n\n\n' )
 # However, the target collateralization should reflect risk tolerance.
 # For example, a cautious trader may feel comfortable using a target of 150%.
 # Or the trader may prefer to be overcollateralized at 200% during periods of high volatility.
+
+
+# Define alert function
+def alert( message ):
+    # Send message via SMS.
+    snsresponse = snsclient.publish( PhoneNumber='+15108045618', Message=message )
+    responseout = json.dumps( snsresponse, sort_keys=True, indent=4, separators=(',', ': ') )
+    logger.debug ( responseout )
+    # Log SMS execution details
 
 
 # Define best price function
@@ -117,6 +131,7 @@ wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 # Start market maker
 while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
+    alert( 'Initiating market making.' )
 
     # Get best ask and determine price trigger
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
@@ -209,6 +224,7 @@ while True:
         lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
         if lastfill["fills"][0]["orderId"] == placed_bid["order"]["id"]:
             logger.info ( 'Order %s was filled.', placed_bid["order"]["id"])
+            alert( f'Bid {greatestbid} DAI for {bidquantity} ETH')
             break
 
 
@@ -304,12 +320,14 @@ while True:
     # Withdraw DAI gains if any
     # Check dYdX DAI account balance
     balances = client.eth.get_my_balances()
-    daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
+    newdaibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
+    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance} DAI.' )
+    alert( f'DAI balance changed by {newdaibalance - daibalance} DAI because of the last trade.' )
     # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
-    if Decimal(daibalance) > 2:
+    if Decimal(newdaibalance) > 2:
         withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
         # Display deposit confirmation
-        logger.info ( f'Depositing {daibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+        logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
         receipt = client.eth.get_receipt( withdrawalhash )
         web3out = Web3.toJSON( receipt )
         logger.debug ( web3out )
