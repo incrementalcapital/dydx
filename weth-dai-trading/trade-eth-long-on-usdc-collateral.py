@@ -1,53 +1,29 @@
 #!/usr/bin/env python3
 
 
-import os
 import json
 import time
-import logging
+from web3 import Web3
 from decimal import Decimal
 
 from dydx.client import Client
 import dydx.constants as consts
 import dydx.util as utils
 
+from logger import logger
+from messenger import alert
 from credentials import client
-
-
-# Create custom logger
-logger = logging.getLogger('tradelogger')
-logger.setLevel(logging.DEBUG)
-script = os.path.splitext(__file__)
-outlog = '/tmp/' + script[0] + '.out'
-errlog = '/tmp/' + script[0] + '.err'
-# Create console and file handlers
-consolehandler = logging.StreamHandler()
-fileouthandler = logging.FileHandler(outlog)
-fileerrhandler = logging.FileHandler(errlog)
-consolehandler.setLevel(logging.INFO)
-fileouthandler.setLevel(logging.DEBUG)
-fileerrhandler.setLevel(logging.WARNING)
-# Create formatters and add it to handlers
-consoleformat = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
-fileoutformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s')
-fileerrformat = logging.Formatter('%(asctime)s PID[%(process)d]:  %(levelname)s  -  %(message)s  [from %(name)s]')
-consolehandler.setFormatter(consoleformat)
-fileouthandler.setFormatter(fileoutformat)
-fileerrhandler.setFormatter(fileerrformat)
-# Add handlers to the logger
-logger.addHandler(consolehandler)
-logger.addHandler(fileouthandler)
-logger.addHandler(fileerrhandler)
 
 
 # Define the return on assets and price drop (pricetrigger) required for bidding
 # Also define a stop limit ask and a stop market ask (just in case the price crashes)
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
-pricetrigger = Decimal( "0.99" )
+logger.info( f'Define execution parameters...' )
+pricetrigger = Decimal( "1" )
 logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
-requiredreturn = Decimal( "1.01" )
+requiredreturn = Decimal( "1.02" )
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):5.2f}%' )
 # Submit an ask immediately after the bid is filled.
 stoplimitask = Decimal( "0.99" )
@@ -61,6 +37,7 @@ logger.info ( f'maximumleverage = {maximumleverage:5.2f}X' )
 # 5X constants established by dYdX (note that it is 4X for a SHORT)
 minimumcollateralization = Decimal( "1.25" )
 logger.info ( f'minimumcollateralization = {100*minimumcollateralization:5.2f}%' )
+logger.info( f'Execution parameters defined.\n\n\n\n' )
 # dYdX accounts must be overcollateralized at the ratio of 125%.
 # Note that positions are liquidated at 115%.
 # However, the target collateralization should reflect risk tolerance.
@@ -165,7 +142,7 @@ logger.info ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates 
 logger.info ( f'Presently has {usdbalance:10.4f} USD [a negative sign indicates debt].')
 logger.info ( f'Presently has {daibalance:10.4f} DAI [a negative sign indicates debt].')
 logger.info ( f'dYdX allows {100/minimumcollateralization:5.2f}% for trades on margin.')
-logger.info ( f'The maximum debt presently available is presently {maximumdebt:10.4f}.')
+logger.info ( f'The maximum possible liability allowed is now {maximumdebt:10.4f} DAI.')
 logger.info ( f'Thanks the {maximumleverage:5.2f}X leverage on {totalmargin:5.2f} DAI.')
 logger.info ( f'The debt available to this dYdX account is: {availabledebt:10.4f} DAI.')
 
@@ -190,17 +167,20 @@ logger.info ( jsondata )
 
 
 # Loop until the bid is filled
+smsalert( f'Submitting a bid for {bidquantity} ETH at {greatestbid}.' )
 while True:
+    # Give a status update on the get_orderbook
+    orderbookpricing = bestprices( 'WETH-DAI', daiquotetick )
+    topask = orderbookpricing[0]
+    topbid = orderbookpricing[1]
+    logger.debug( f'Bidding {greatestbid}. The highest bid now is {topbid} and the cheapest ask is {topask}.')
     # Give the bid placed five seconds to fill
     time.sleep(5)
-
     # Get fills
-    my_fills = client.get_my_fills(
-        market=['WETH-DAI'],
-        limit=1
-    )
-    if my_fills["fills"][0]["orderId"] == placed_bid["order"]["id"]:
+    lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
+    if lastfill["fills"][0]["orderId"] == placed_bid["order"]["id"]:
         logger.info ( 'Order %s was filled.', placed_bid["order"]["id"])
+        smsalert( f'Bid {greatestbid} DAI for {bidquantity} ETH')
         break
 
 
@@ -242,14 +222,13 @@ while True:
         bookprices = bestprices( 'WETH-DAI', daiquotetick )
         bookmarket = Decimal( bookprices[1] )
         limitprice = Decimal( bookprices[2] )
-        logger.debug ( f'The highest bid in the orderbook is: {bookmarket:10.4f}' )
-        logger.debug ( f'The most competitive ask that you could post to the orderbook is: {limitprice:10.4f}' )
+        logger.debug ( f'The highest bid in the orderbook is {bookmarket-sellthreshold:10.4f} DAI above the stop limit {sellthreshold:10.4f}, and {bookmarket-dumpthreshold:10.4f} DAI above the stop market {dumpthreshold:10.4f}.' )
 
         # If the present price is below the trigger price this loop ends
         if Decimal( bookmarket ) < Decimal( dumpthreshold ):
             logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop market sell threshold: {dumpthreshold:10.4f}')
             # Create order to SELL ETH
-            placed_ask = client.place_order(
+            placed_stop = client.place_order(
                 market=consts.PAIR_WETH_DAI,
                 side=consts.SIDE_SELL,
                 amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
@@ -258,11 +237,11 @@ while True:
                 postOnly=False
             )
             # Display order information
-            jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
+            jsondata = json.dumps( placed_stop, sort_keys=True, indent=4, separators=(',', ': ') )
             logger.info ( jsondata )
             # Cancel the previously submitted ask then exit the loop.
             logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
-            canceledask = client.cancel_order( hash=my_order["order"]["id"] )
+            canceledask = client.cancel_order( hash=placed_ask["order"]["id"] )
             # Display order cancel information
             jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
             logger.info ( jsondata )
@@ -271,7 +250,7 @@ while True:
         elif Decimal( dumpthreshold ) < Decimal( bookmarket ) < Decimal( sellthreshold ):
             logger.info ( f'The highest bid in the orderbook [{bookmarket:10.4f}] just fell below the stop limit sell threshold: {sellthreshold:10.4f}')
             # Create order to SELL ETH
-            placed_ask = client.place_order(
+            placed_stop = client.place_order(
                 market=consts.PAIR_WETH_DAI,
                 side=consts.SIDE_SELL,
                 amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
@@ -280,13 +259,34 @@ while True:
                 postOnly=False
             )
             # Display order information
-            jsondata = json.dumps( placed_ask, sort_keys=True, indent=4, separators=(',', ': ') )
+            jsondata = json.dumps( placed_stop, sort_keys=True, indent=4, separators=(',', ': ') )
             logger.info ( jsondata )
             # Cancel the previously submitted ask then exit the loop.
             logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
-            canceledask = client.cancel_order( hash=my_order["order"]["id"] )
+            canceledask = client.cancel_order( hash=placed_ask["order"]["id"] )
             # Display order cancel information
             jsondata = json.dumps( canceledask, sort_keys=True, indent=4, separators=(',', ': ') )
             logger.info ( jsondata )
             # Exit loop
             break
+
+# Sleep
+# Give the blockchain sufficient time
+time.sleep(120)
+# Gave two minutes to write the transaction
+
+# Withdraw DAI gains if any
+# Check dYdX DAI account balance
+balances = client.eth.get_my_balances()
+newdaibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
+logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance} DAI.' )
+smsalert( f'DAI balance changed by {newdaibalance - daibalance} DAI because of the last trade.' )
+# Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
+if Decimal(newdaibalance) > 2:
+    withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
+    # Display deposit confirmation
+    logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+    receipt = client.eth.get_receipt( withdrawalhash )
+    web3out = Web3.toJSON( receipt )
+    logger.debug ( web3out )
+    logger.info ( 'Done.' )
