@@ -274,8 +274,10 @@ while True:
                 # Exit loop
                 break
 
-    # Sleep ten seconds
-    time.sleep(10)
+    # Sleep
+    # Give the blockchain sufficient time
+    time.sleep(120)
+    # Gave two minutes to write the transaction
 
     # Withdraw DAI gains if any
     # Check dYdX DAI account balance
