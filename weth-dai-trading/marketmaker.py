@@ -91,7 +91,6 @@ wethassetid = markets["markets"]["WETH-DAI"]["baseCurrency"]["soloMarketId"]
 # Start market maker
 while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
-    smsalert( 'Initiating market making.' )
 
     # Get best ask and determine price trigger
     bookprices = bestprices( 'WETH-DAI', daiquotetick )
@@ -172,12 +171,13 @@ while True:
 
 
     # Loop until the bid is filled
+    smsalert( f'Submitting a bid for {bidquantity} ETH at {greatestbid}.' )
     while True:
         # Give a status update on the get_orderbook
         orderbookpricing = bestprices( 'WETH-DAI', daiquotetick )
         topask = orderbookpricing[0]
         topbid = orderbookpricing[1]
-        logger.debug( f'Submitted a bid for {bidquantity} ETH at {greatestbid}. The best bid now is {topbid} and the best ask is {topask}.')
+        logger.debug( f'Bidding {greatestbid}. The highest bid now is {topbid} and the cheapest ask is {topask}.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
         # Get fills
