@@ -10,7 +10,7 @@ from logger import logger
 snsclient = boto3.client('sns')
 
 # Define alert function
-def alert( message ):
+def smsalert( message ):
     # Send message via SMS.
     snsresponse = snsclient.publish( PhoneNumber='+15108045618', Message=message )
     responseout = json.dumps( snsresponse, sort_keys=True, indent=4, separators=(',', ': ') )

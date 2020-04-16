@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 
-from messenger import alert
+from messenger import smsalert
 
 
-alert( 'SMS testing. Please ignore.' )
+smsalert( 'SMS testing. Please ignore.' )
