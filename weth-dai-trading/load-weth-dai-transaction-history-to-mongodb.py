@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import dns
 import json
 import pymongo
 
@@ -19,7 +20,16 @@ wethdaitrades = client.get_my_trades(
     startingBefore=None  # optional
 )
 
+# Create a database
+# Use the "trading account" identifier provided
 db = dbclient[tradingaccount]
-collection = db["wethdaitransactionhistory"]
+# [ALTERNATIVE SYNTAX] : db = dbclient.<tradingaccount>
+
+# Create a collection
+transactioncollection = db["wethdaitransactionhistory"]
+# [ALTERNATIVE SYNTAX] : transactioncollection = db.wethdaitransactionhistory
+
+# Insert documents into the collection
+# This is done one-at-a-time below
 for trade in wethdaitrades["trades"]:
-    transactionhistory = collection.insert_one(trade)
+    transactionhistory = transactioncollection.insert_one(trade)
