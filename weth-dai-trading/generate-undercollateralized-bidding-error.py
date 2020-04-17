@@ -24,7 +24,7 @@ orderinginfo = bestorders( 'WETH-DAI', quotetick )
 logger.debug ( f'{orderinginfo[0]} is the best market ask.' )
 logger.debug ( f'{orderinginfo[1]} is the best market bid.' )
 logger.debug ( f'{orderinginfo[2]} is the best limit ask.' )
-logger.debug ( f'{orderinginfo[3]} is the best limit ask.' )
+logger.debug ( f'{orderinginfo[3]} is the best limit bid.' )
 
 try:
     # Create order to BUY more ETH than collateral allows
