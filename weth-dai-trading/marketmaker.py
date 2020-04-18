@@ -70,7 +70,7 @@ while True:
         prices = bestorders( 'WETH-DAI', daiquotetick )
         topask = Decimal(prices[1])
         # If the present price is below the trigger price this loop ends
-    logger.info ( f'The lowest ask on the market [{topask:.4f}] is less than (or equals) the trigger price [{marker:.4f}]' )
+    logger.info ( f'The lowest ask on the market [{topask:.4f} DAI/ETH] is less than (or equals) the trigger price [{marker:.4f} DAI/ETH]' )
 
 
     # Get credit available
@@ -105,7 +105,7 @@ while True:
         prices = bestorders( 'WETH-DAI', daiquotetick )
         topask = prices[1]
         topbid = prices[0]
-        logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} and the cheapest ask is {topask:.4f}.')
+        logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
         # Get fills
@@ -162,7 +162,7 @@ while True:
 
             # Exit loop if the top bid falls below the marker
             if Decimal( topbid ) < Decimal( sellthreshold ):
-                logger.info ( f'The highest bid in the orderbook [{topbid:.4f}] just fell below the stop limit [{sellthreshold:.4f}]')
+                logger.info ( f'The highest bid in the orderbook [{topbid:.4f} DAI/ETH] just fell below the stop limit [{sellthreshold:.4f} DAI/ETH]')
                 # Cancel the previously submitted ask first to avoid any undercapitalization errors.
                 logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
                 canceledask = client.cancel_order( hash=submission["order"]["id"] )
