@@ -93,10 +93,11 @@ while True:
         logger.critical("Exception occurred", exc_info=True)
 
     # Write the submission's response to the logs
-    logger.debug ( f'Order submission:\n{submission}' )
+    jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
+    logger.debug ( f'Order submission:\n{jsondata}' )
     # Display submission information to the console
-    logger.info ( f'Buying {amount} ETH at {bideth.quantize( Decimal( quotetick ) )} DAI/ETH.' )
-    smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount} ETH.' )
+    logger.info ( f'Buying {amount:.4f} ETH at {bideth.quantize( Decimal( quotetick ) )} DAI/ETH.' )
+    smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount:.4f} ETH.' )
 
 
     # Loop until the bid is filled
@@ -112,7 +113,7 @@ while True:
         lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
         if lastfill["fills"][0]["orderId"] == submission["order"]["id"]:
             logger.info ( 'Order %s was filled.', submission["order"]["id"])
-            smsalert( f'Bid {bideth*amount:.4f} DAI for {amount} ETH.')
+            smsalert( f'Bid {bideth*amount:.4f} DAI for {amount:.4f} ETH.')
             break
 
 
@@ -131,10 +132,11 @@ while True:
         logger.critical("Exception occurred", exc_info=True)
 
     # Write the submission's response to the logs
-    logger.debug ( f'Order submission:\n{submission}' )
+    jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
+    logger.debug ( f'Order submission:\n{jsondata}' )
     # Display submission information to the console
     logger.info ( f'Selling {quantity} ETH at {askprice.quantize( Decimal( quotetick ) )} DAI/ETH.' )
-    smsalert( f'Bidding {askprice*quantity:.4f} DAI for {quantity} ETH.' )
+    smsalert( f'Bidding {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
 
     # Define stop limit sell order price
@@ -148,7 +150,7 @@ while True:
         submittedask = client.get_order( orderId=submission["order"]["id"] )
         if submittedask["order"]["status"] == "FILLED":
             # Exit: End the loop and exit.
-            logger.info ( f'Order {submittedask["order"]["id"]} was filled at: {submittedask["order"]["price"]} DAI/ETH.')
+            logger.info ( f'Order {submittedask["order"]["id"]} was filled at: {submittedask["order"]["price"]:.4f} DAI/ETH.')
             break
         else:
             # Sleep
@@ -180,10 +182,11 @@ while True:
                     logger.critical("Exception occurred", exc_info=True)
 
                 # Write the submission's response to the logs
-                logger.debug ( f'Order submission:\n{submission}' )
+                jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
+                logger.debug ( f'Order submission:\n{jsondata}' )
                 # Display submission information to the console
-                logger.info ( f'Selling {quantity} ETH at {asketh.quantize( Decimal( quotetick ) )} DAI/ETH.' )
-                smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity} ETH.' )
+                logger.info ( f'Selling {quantity:.4f} ETH at {asketh.quantize( Decimal( quotetick ) )} DAI/ETH.' )
+                smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
                 while True:
@@ -193,7 +196,7 @@ while True:
                     lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
                     if lastfill["fills"][0]["orderId"] == submission["order"]["id"]:
                         logger.info ( 'Order %s was filled.', submission["order"]["id"])
-                        smsalert( f'Stop filled. Asked {bideth:.4f} DAI/ETH and sold {bideth*amount:.4f} DAI for {amount} ETH.')
+                        smsalert( f'Stop filled. Asked {bideth:.4f} DAI/ETH and sold {bideth*amount:.4f} DAI for {amount:.4f} ETH.')
                         break
 
                 # Exit loop
@@ -209,8 +212,8 @@ while True:
     # Check dYdX DAI account balance
     balances = client.eth.get_my_balances()
     newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
-    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance} DAI.' )
-    smsalert( f'DAI balance changed by {newdaibalance - daibalance} DAI because of the last trade.' )
+    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
+    smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
     # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
     if Decimal(newdaibalance) > 2:
         withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
