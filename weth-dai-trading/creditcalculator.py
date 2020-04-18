@@ -19,20 +19,24 @@ def creditavailable( leverage ):
     # Get (set) dYdX markets and define market constants
     minimumcollateralization = 1.25
 
-    # Get dYdX index price for DAI returned in US dollar terms
-    # dYdX uses price oracles for DAI
-    oracleprice = client.eth.solo.get_oracle_price( consts.MARKET_DAI )
-    normalprice = Decimal(oracleprice) * 10**( consts.DECIMALS_DAI )
-    daiusdprice = Decimal(normalprice)
-    logger.debug( f'The oracles says 1 DAI is: {daiusdprice:10.4f} US dollars')
-
-
-    # Get dYdX account balances
+    # Get dYdX account balances first (fairly static)
     balances = client.eth.solo.get_my_balances()
+
+    # Get the orderbook for the trading pair specified (much more dynamic)
+    daiusdorderbook = client.get_orderbook( market = consts.PAIR_DAI_USDC )
+    ethusdorderbook = client.get_orderbook( market = consts.PAIR_WETH_USDC )
+
+    # Parse out the dYdX ETH & DAI sales prices
+    # They are returned in US dollar terms (USDC)
+    daiusdprice = Decimal( daiusdorderbook["asks"][0]["price"] ) * 10**( consts.DECIMALS_DAI - consts.DECIMALS_USDC )
+    ethusdprice = Decimal( ethusdorderbook["asks"][0]["price"] ) * 10**( consts.DECIMALS_WETH - consts.DECIMALS_USDC )
+    logger.debug( f'The oracles says 1 DAI is: {daiusdprice:10.4f} US dollars')
+    logger.debug( f'The oracles says 1 ETH is: {ethusdprice:10.4f} US dollars')
+
     # Determine overcollateralized collateral (USDC asset balance in DAI terms)
     # And DAI balance to determine the maximum amount of DAI borrowable
     # Do not use the Oracle Price for ETH because it is inaccurate for present debt calculations
-    ethbalance = Decimal( balances[ consts.MARKET_WETH ] / ( 10**consts.DECIMALS_WETH ) ) * Decimal(daiusdprice)
+    ethbalance = Decimal( balances[ consts.MARKET_WETH ] / ( 10**consts.DECIMALS_WETH ) ) * Decimal(ethusdprice)
     usdbalance = Decimal( balances[ consts.MARKET_USDC ] / ( 10**consts.DECIMALS_USDC ) ) / Decimal(daiusdprice)
     daibalance = Decimal( balances[ consts.MARKET_DAI ] / ( 10**consts.DECIMALS_DAI ) )
     # Determine the DAI value of the dYdX account and the margin that affords
