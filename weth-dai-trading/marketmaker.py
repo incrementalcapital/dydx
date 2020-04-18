@@ -11,8 +11,9 @@ import dydx.constants as consts
 import dydx.util as utils
 
 from logger import logger
-from messenger import alert
+from messenger import smsalert
 from credentials import client
+from orderer import bestorders
 
 
 # Define the return on assets and price drop (pricetrigger) required for bidding
@@ -45,38 +46,6 @@ logger.info( f'Execution parameters defined.\n\n\n\n' )
 # Or the trader may prefer to be overcollateralized at 200% during periods of high volatility.
 
 
-# Define best price function
-# Return market / limit price
-def bestprices( tradingpair, quotetick ):
-    # Get the orderbook for the trading pair specified
-    orderbook = client.get_orderbook( market = tradingpair )
-
-    # Define best ask and best bid values in the market
-    marketask = orderbook["asks"][0]["price"]
-    marketbid = orderbook["bids"][0]["price"]
-
-    # Define most competitive limit ask
-    if Decimal( marketask ) - Decimal( marketbid ) > Decimal( quotetick ):
-        rawbid = Decimal( marketask ) - Decimal( quotetick )
-        limitbid = rawbid.quantize( Decimal( quotetick ) )
-    else:
-        rawbid = Decimal( marketbid )
-        limitbid = rawbid.quantize( Decimal( quotetick ) )
-
-    # Define most competitive limit bid
-    if Decimal( marketask ) - Decimal(marketbid) > Decimal(quotetick):
-        rawask = Decimal( marketbid ) + Decimal( quotetick )
-        limitask = rawask.quantize( Decimal( quotetick ) )
-    else:
-        rawask = Decimal( marketask )
-        limitask = rawask.quantize( Decimal( quotetick ) )
-
-    # Return the best ask and best bid
-    # In the orderbook of the trading pair
-    # Also, return the most competitive limit orders
-    return ( marketask, marketbid, limitask, limitbid )
-
-
 # Get dYdX markets and define market constants
 markets = client.get_markets()
 daiquotetick = markets["markets"]["WETH-DAI"]["minimumTickSize"]
@@ -93,7 +62,7 @@ while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
 
     # Get best ask and determine price trigger
-    bookprices = bestprices( 'WETH-DAI', daiquotetick )
+    bookprices = bestorders( 'WETH-DAI', daiquotetick )
     presentask = Decimal( bookprices[0] )
     triggerask = Decimal( presentask ) * Decimal ( pricetrigger )
     logger.info ( f'The lowest ask in the orderbook is: {presentask:10.4f} DAI/ETH' )
@@ -105,7 +74,7 @@ while True:
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
         # Update prices
-        bookprices = bestprices( 'WETH-DAI', daiquotetick )
+        bookprices = bestorders( 'WETH-DAI', daiquotetick )
         presentask = Decimal(bookprices[0])
         # If the present price is below the trigger price this loop ends
     logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than (or equals) the trigger price: {triggerask:10.4f}' )
@@ -153,7 +122,7 @@ while True:
 
     # Determine most competitive bid price and amount
     # Based on the debt remaining and present market values
-    bookpricing = bestprices( 'WETH-DAI', daiquotetick )
+    bookpricing = bestorders( 'WETH-DAI', daiquotetick )
     greatestbid = bookpricing[3]
     bidquantity = Decimal(availabledebt) / Decimal(greatestbid)
     # Submit the order to BUY ETH
@@ -171,10 +140,10 @@ while True:
 
 
     # Loop until the bid is filled
-    smsalert( f'Submitting a bid for {bidquantity} ETH at {greatestbid}.' )
+    smsalert( f'Bidding {greatestbid} DAI for {bidquantity} ETH.' )
     while True:
         # Give a status update on the get_orderbook
-        orderbookpricing = bestprices( 'WETH-DAI', daiquotetick )
+        orderbookpricing = bestorders( 'WETH-DAI', daiquotetick )
         topask = orderbookpricing[0]
         topbid = orderbookpricing[1]
         logger.debug( f'Bidding {greatestbid}. The highest bid now is {topbid} and the cheapest ask is {topask}.')
@@ -223,7 +192,7 @@ while True:
             # Sleep
             # Then check price
             time.sleep(5)
-            bookprices = bestprices( 'WETH-DAI', daiquotetick )
+            bookprices = bestorders( 'WETH-DAI', daiquotetick )
             bookmarket = Decimal( bookprices[1] )
             limitprice = Decimal( bookprices[2] )
             logger.debug ( f'The highest bid in the orderbook is {bookmarket-sellthreshold:10.4f} DAI above the stop limit {sellthreshold:10.4f}, and {bookmarket-dumpthreshold:10.4f} DAI above the stop market {dumpthreshold:10.4f}.' )
