@@ -46,7 +46,7 @@ logger.info( f'Execution parameters defined.\n\n\n\n' )
 # For example, a cautious trader may feel comfortable using a target of 150%.
 # Or the trader may prefer to be overcollateralized at 200% during periods of high volatility.
 markets = client.get_markets()
-daiquotetick = markets["markets"]["WETH-DAI"]["minimumTickSize"]
+quotetick = markets["markets"]["WETH-DAI"]["minimumTickSize"]
 # Defined dYdX market constant
 
 
@@ -55,7 +55,7 @@ while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
 
     # Get best (top) ask and calculate trigger (marker)
-    prices = bestorders( 'WETH-DAI', daiquotetick )
+    prices = bestorders( 'WETH-DAI', quotetick )
     topask = Decimal( prices[1] )
     marker = Decimal( topask ) * Decimal ( pricetrigger )
     logger.info ( f'The lowest ask in the orderbook is {topask:.4f} DAI/ETH' )
@@ -67,7 +67,7 @@ while True:
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
         # Update prices
-        prices = bestorders( 'WETH-DAI', daiquotetick )
+        prices = bestorders( 'WETH-DAI', quotetick )
         topask = Decimal(prices[1])
         # If the present price is below the trigger price this loop ends
     logger.info ( f'The lowest ask on the market [{topask:.4f} DAI/ETH] is less than (or equals) the trigger price [{marker:.4f} DAI/ETH]' )
@@ -79,7 +79,7 @@ while True:
 
     # Determine most competitive bid price and amount
     # Based on the debt remaining and present market values
-    prices = bestorders( 'WETH-DAI', daiquotetick )
+    prices = bestorders( 'WETH-DAI', quotetick )
     bideth = prices[3]
     amount = Decimal(availablecredit) / Decimal(bideth)
 
@@ -102,7 +102,7 @@ while True:
     # Loop until the bid is filled
     while True:
         # Give a status update on the get_orderbook
-        prices = bestorders( 'WETH-DAI', daiquotetick )
+        prices = bestorders( 'WETH-DAI', quotetick )
         topask = prices[1]
         topbid = prices[0]
         logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
@@ -154,7 +154,7 @@ while True:
             # Sleep
             # Then check price
             time.sleep(5)
-            prices = bestorders( 'WETH-DAI', daiquotetick )
+            prices = bestorders( 'WETH-DAI', quotetick )
             topask = Decimal( prices[1] )
             topbid = Decimal( prices[0] )
             asketh = Decimal( prices[2] )
