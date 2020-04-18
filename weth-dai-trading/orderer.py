@@ -31,3 +31,33 @@ def bestorders( tradingpair, quotetick ):
     # In the orderbook of the trading pair
     # Also, return the most competitive limit orders
     return ( marketask, marketbid, limitask, limitbid )
+
+
+# Define post-only ask
+# In other words, limit ask
+def postask( price, quantity ):
+        # Create order to SELL ETH
+        placed_ask = client.place_order(
+            market=consts.PAIR_WETH_DAI,
+            side=consts.SIDE_SELL,
+            amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
+            price=price,
+            fillOrKill=False,
+            postOnly=True
+        )
+        return placed_ask
+
+
+# Define post-only bid
+# In other words, limit bid
+def postbid( price, quantity ):
+        # Submit the order to BUY ETH
+        placed_bid = client.place_order(
+            market=consts.PAIR_WETH_DAI,
+            side=consts.SIDE_BUY,
+            amount=utils.token_to_wei(quantity, consts.MARKET_WETH),
+            price=price,
+            fillOrKill=False,
+            postOnly=True
+        )
+        return placed_bid
