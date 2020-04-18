@@ -21,10 +21,10 @@ from orderer import bestorders
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 logger.info( f'Define execution parameters...' )
-pricetrigger = Decimal( "0.995" )
+pricetrigger = Decimal( "0.9987" )
 logger.info ( f'pricetrigger = {100*pricetrigger:5.2f}%' )
 # Submit a bid after a 1% drop in the ask price
-requiredreturn = Decimal( "1.007" )
+requiredreturn = Decimal( "1.0013" )
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):5.2f}%' )
 # Submit an ask immediately after the bid is filled.
 stoplimitask = Decimal( "0.99" )
@@ -63,21 +63,21 @@ while True:
 
     # Get best ask and determine price trigger
     bookprices = bestorders( 'WETH-DAI', daiquotetick )
-    presentask = Decimal( bookprices[0] )
-    triggerask = Decimal( presentask ) * Decimal ( pricetrigger )
-    logger.info ( f'The lowest ask in the orderbook is: {presentask:10.4f} DAI/ETH' )
+    sellingeth = Decimal( bookprices[1] )
+    triggerask = Decimal( sellingeth ) * Decimal ( pricetrigger )
+    logger.info ( f'The lowest ask in the orderbook is: {sellingeth:10.4f} DAI/ETH' )
     logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below: {triggerask:10.4f} DAI/ETH' )
     logger.info ( f'Enter a loop to monitor the market...' )
     # Loop until the ask drops below the trigger price
-    while Decimal(presentask) > Decimal(triggerask):
-        logger.debug ( f'{presentask:10.4f} > {triggerask:10.4f}' )
+    while Decimal(sellingeth) > Decimal(triggerask):
+        logger.debug ( f'{sellingeth:10.4f} > {triggerask:10.4f}' )
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
         # Update prices
         bookprices = bestorders( 'WETH-DAI', daiquotetick )
-        presentask = Decimal(bookprices[0])
+        sellingeth = Decimal(bookprices[1])
         # If the present price is below the trigger price this loop ends
-    logger.info ( f'The lowest ask on the market [{presentask:10.4f}] is less than (or equals) the trigger price: {triggerask:10.4f}' )
+    logger.info ( f'The lowest ask on the market [{sellingeth:10.4f}] is less than (or equals) the trigger price: {triggerask:10.4f}' )
 
 
     # Get dYdX index price for DAI returned in US dollar terms
@@ -93,7 +93,7 @@ while True:
     # Determine overcollateralized collateral (USDC asset balance in DAI terms)
     # And DAI balance to determine the maximum amount of DAI borrowable
     # Do not use the Oracle Price for ETH because it is inaccurate for present debt calculations
-    ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(presentask)
+    ethbalance = Decimal( balances[wethassetid] / (10**wethdecimals) ) * Decimal(sellingeth)
     usdbalance = Decimal( balances[usdcassetid] / (10**usdcdecimals) ) / Decimal(daiusdprice)
     daibalance = Decimal( balances[daiassetid] / (10**daidecimals) )
     # Determine the DAI value of the dYdX account and the margin that affords
@@ -193,7 +193,7 @@ while True:
             # Then check price
             time.sleep(5)
             bookprices = bestorders( 'WETH-DAI', daiquotetick )
-            bookmarket = Decimal( bookprices[1] )
+            bookmarket = Decimal( bookprices[0] )
             limitprice = Decimal( bookprices[2] )
             logger.debug ( f'The highest bid in the orderbook is {bookmarket-sellthreshold:10.4f} DAI above the stop limit {sellthreshold:10.4f}, and {bookmarket-dumpthreshold:10.4f} DAI above the stop market {dumpthreshold:10.4f}.' )
 
