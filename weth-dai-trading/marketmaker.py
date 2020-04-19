@@ -46,7 +46,7 @@ logger.info( f'Execution parameters defined.\n\n\n\n' )
 # For example, a cautious trader may feel comfortable using a target of 150%.
 # Or the trader may prefer to be overcollateralized at 200% during periods of high volatility.
 markets = client.get_markets()
-quotetick = markets["markets"]["WETH-DAI"]["minimumTickSize"]
+quotetick = Decimal( markets["markets"]["WETH-DAI"]["minimumTickSize"] )
 # Defined dYdX market constant
 
 
@@ -63,13 +63,19 @@ while True:
     logger.info ( f'Enter a loop to monitor the market...' )
     # Loop until the ask drops below the trigger price
     while Decimal(topask) > Decimal(marker):
-        logger.debug ( f'{topask:.4f} > {marker:.4f}' )
+        logger.debug ( f'Best Ask [{topask:.4f}] > Trigger Price [{marker:.4f}]' )
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
+        # Record old ask
+        oldask = topask
         # Update prices
         prices = bestorders( 'WETH-DAI', quotetick )
         topask = Decimal( prices[1] )
-        # If the present price is below the trigger price this loop ends
+        # If the present price is higher than the old ask
+        if Decimal(topask) > Decimal(oldask):
+            # Redefine trigger
+            marker = Decimal( topask ) * Decimal ( pricetrigger )
+        # If the present price is below the previously defined trigger price this loop essentially ends here
     logger.info ( f'The lowest ask on the market [{topask:.4f} DAI/ETH] is less than (or equals) the trigger price [{marker:.4f} DAI/ETH]' )
 
 
@@ -80,13 +86,13 @@ while True:
     # Determine most competitive bid price and amount
     # Based on the debt remaining and present market values
     prices = bestorders( 'WETH-DAI', quotetick )
-    bideth = Decimal( prices[3] )
-    amount = Decimal( availablecredit ) / Decimal( bideth )
+    bideth = Decimal( prices[3] ).quantize( quotetick )
+    amount = Decimal( availablecredit ) / Decimal( prices[3] )
 
     # Bid
     try:
         # Submit order to dYdX
-        submission = postbid( bideth.quantize( Decimal( quotetick ) ), amount )
+        submission = postbid( bideth, amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -96,7 +102,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Display submission information to the console
-    logger.info ( f'Buying {amount:.4f} ETH at {bideth:.4f} DAI/ETH.' )
+    logger.info ( f'Buying {amount:.4f} ETH at {bideth} DAI/ETH.' )
     smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount:.4f} ETH.' )
 
 
@@ -125,7 +131,7 @@ while True:
     # Ask
     try:
         # Submit order to dYdX
-        submission = postask( askprice.quantize( Decimal( quotetick ) ), quantity )
+        submission = postask( askprice, quantity )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -157,14 +163,14 @@ while True:
             # Then check price
             time.sleep(5)
             prices = bestorders( 'WETH-DAI', quotetick )
-            topask = Decimal( prices[1] )
-            topbid = Decimal( prices[0] )
-            asketh = Decimal( prices[2] )
+            topask = Decimal( prices[1] ).quantize( quotetick )
+            topbid = Decimal( prices[0] ).quantize( quotetick )
+            asketh = Decimal( prices[2] ).quantize( quotetick )
             logger.debug ( f'The highest bid in the orderbook is {topbid-sellthreshold:.4f} DAI above the stop limit {sellthreshold:.4f}.' )
 
             # Exit loop if the top bid falls below the marker
-            if Decimal( topbid ) < Decimal( sellthreshold ):
-                logger.info ( f'The highest bid in the orderbook [{topbid:.4f} DAI/ETH] just fell below the stop limit [{sellthreshold:.4f} DAI/ETH]')
+            if Decimal( prices[0] ) < Decimal( sellthreshold ):
+                logger.info ( f'The highest bid in the orderbook [{topbid} DAI/ETH] just fell below the stop limit [{sellthreshold} DAI/ETH]')
                 # Cancel the previously submitted ask first to avoid any undercapitalization errors.
                 logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
                 canceledask = client.cancel_order( hash=submission["order"]["id"] )
@@ -175,7 +181,7 @@ while True:
                 # Stop
                 try:
                     # Submit order to dYdX
-                    submission = postask( asketh.quantize( Decimal( quotetick ) ), quantity )
+                    submission = postask( asketh, quantity )
 
                 except Exception as e:
                     # Throw a critical error notice if anything funky occurs
@@ -185,7 +191,7 @@ while True:
                 jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.debug ( f'Order submission:\n{jsondata}' )
                 # Display submission information to the console
-                logger.info ( f'Selling {quantity:.4f} ETH at {asketh:.4f} DAI/ETH.' )
+                logger.info ( f'Selling {quantity:.4f} ETH at {asketh} DAI/ETH.' )
                 smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
