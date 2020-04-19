@@ -10,14 +10,14 @@ from credentials import client
 
 
 # Get dYdX account balances
-balances = client.eth.get_my_balances()
+balances = client.eth.solo.get_my_balances()
 
 # Disaggregate asset balances
-ethbalance = Decimal(balances[0] / (10**18))
-usdbalance = Decimal(balances[2] / (10**6))
-daibalance = Decimal(balances[3] / (10**18))
+ethbalance = Decimal(balances[consts.MARKET_WETH] / (10**consts.DECIMALS_WETH))
+usdbalance = Decimal(balances[consts.MARKET_USDC] / (10**consts.DECIMALS_USDC))
+daibalance = Decimal(balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI))
 
 # Display dYdX account balance information
-print (f'{ethbalance:28.18f} ETH')
-print (f'{usdbalance:28.18f} USD')
-print (f'{daibalance:28.18f} DAI')
+print (f'{ethbalance:28.4f} ETH')
+print (f'{usdbalance:28.4f} USD')
+print (f'{daibalance:28.4f} DAI')
