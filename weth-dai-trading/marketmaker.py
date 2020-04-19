@@ -86,7 +86,7 @@ while True:
     # Bid
     try:
         # Submit order to dYdX
-        submission = postbid( bideth, amount )
+        submission = postbid( bideth.quantize( Decimal( quotetick ) ), amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
