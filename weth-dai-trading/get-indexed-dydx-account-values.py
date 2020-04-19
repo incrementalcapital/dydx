@@ -20,13 +20,13 @@ daipricing = client.eth.solo.get_oracle_price( 3 )
 balances = client.eth.solo.get_my_balances()
 
 # Disaggregate asset balances
-ethbalance = Decimal(balances[0] / (10**18))
-usdbalance = Decimal(balances[2] / (10**6))
-daibalance = Decimal(balances[3] / (10**18))
+ethbalance = Decimal(balances[consts.MARKET_WETH] / (10**consts.DECIMALS_WETH))
+usdbalance = Decimal(balances[consts.MARKET_USDC] / (10**consts.DECIMALS_USDC))
+daibalance = Decimal(balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI))
 
 # Dollarize balances
-ethprice = Decimal( 10**18 ) * Decimal( ethpricing )
-daiprice = Decimal( 10**18 ) * Decimal( daipricing )
+ethprice = Decimal( 10**consts.DECIMALS_WETH ) * Decimal( ethpricing )
+daiprice = Decimal( 10**consts.DECIMALS_DAI ) * Decimal( daipricing )
 ethvalue = ethbalance * ethprice
 daivalue = daibalance * daiprice
 
