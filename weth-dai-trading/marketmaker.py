@@ -33,7 +33,7 @@ logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 stoplimit = 0.99
 logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
-appliedleverage = 1.02
+appliedleverage = 3
 logger.info ( f'appliedleverage = {appliedleverage:.2f}X' )
 # The maximim leverage that can be applied going LONG is 5X.
 # This is established by dYdX (note that it is 4X for a SHORT)
@@ -89,10 +89,12 @@ while True:
     bideth = Decimal( prices[3] )
     amount = Decimal( availablecredit ) / Decimal( prices[3] )
     if Decimal( amount ) < consts.SMALL_TRADE_SIZE_WETH:
+        logger.debug ('Check account margin or leverage [presently {appliedleverage}X] used.')
         logger.debug ( f'Insufficient collateral. The bid {amount:.4f} is below {consts.SMALL_TRADE_SIZE_WETH}.' )
-        logger.info( f'Unable to provide liquidity for those shorting ETH... Going to sleep for 10 hours.' )
+        logger.info( f'Unable to provide liquidity for those shorting ETH... Going to sleep for 10 hours.\n\n\n\n' )
         smsalert( f'Invalid bid quantity [{amount:.4f} DAI].' )
         time.sleep(36000)
+        continue
 
     # Bid
     try:
