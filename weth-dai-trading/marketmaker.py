@@ -24,7 +24,7 @@ from creditcalculator import creditavailable
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 logger.info( f'Define execution parameters...' )
-pricetrigger = 0.9987
+pricetrigger = 0.9999
 logger.info ( f'pricetrigger = {100*pricetrigger:.2f}%' )
 # Submit a bid after a 1% drop in the ask price
 requiredreturn = 1.0013
@@ -86,7 +86,7 @@ while True:
     # Bid
     try:
         # Submit order to dYdX
-        submission = postbid( bideth.quantize( Decimal( quotetick ) ), amount )
+        submission = postbid( bideth, amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
