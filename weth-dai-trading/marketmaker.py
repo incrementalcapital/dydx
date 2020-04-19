@@ -86,13 +86,14 @@ while True:
     # Determine most competitive bid price and amount
     # Based on the debt remaining and present market values
     prices = bestorders( 'WETH-DAI', quotetick )
-    bideth = Decimal( prices[3] ).quantize( quotetick )
+    bideth = Decimal( prices[3] )
     amount = Decimal( availablecredit ) / Decimal( prices[3] )
 
     # Bid
     try:
         # Submit order to dYdX
-        submission = postbid( bideth, amount )
+        logger.debug ( f'Bidding {bideth.quantize( quotetick )} DAI/ETH for {amount:.4f} ETH.' )
+        submission = postbid( bideth.quantize( quotetick ), amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -101,8 +102,7 @@ while True:
     # Write the submission's response to the logs
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
-    # Display submission information to the console
-    logger.info ( f'Buying {amount:.4f} ETH at {bideth} DAI/ETH.' )
+    # Report submission information via SMS
     smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount:.4f} ETH.' )
 
 
@@ -131,6 +131,7 @@ while True:
     # Ask
     try:
         # Submit order to dYdX
+        logger.debug ( f'Asking {askprice} DAI/ETH for {quantity:.4f} ETH.' )
         submission = postask( askprice, quantity )
 
     except Exception as e:
@@ -140,8 +141,7 @@ while True:
     # Write the submission's response to the logs
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
-    # Display submission information to the console
-    logger.info ( f'Selling {quantity} ETH at {askprice:.4f} DAI/ETH.' )
+    # Report submission information via SMS
     smsalert( f'Bidding {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
 
@@ -181,6 +181,7 @@ while True:
                 # Stop
                 try:
                     # Submit order to dYdX
+                    logger.debug ( f'Asking {asketh} DAI/ETH for {quantity:.4f} ETH to stop losses.' )
                     submission = postask( asketh, quantity )
 
                 except Exception as e:
@@ -190,8 +191,7 @@ while True:
                 # Write the submission's response to the logs
                 jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.debug ( f'Order submission:\n{jsondata}' )
-                # Display submission information to the console
-                logger.info ( f'Selling {quantity:.4f} ETH at {asketh} DAI/ETH.' )
+                # Report submission information via SMS
                 smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
