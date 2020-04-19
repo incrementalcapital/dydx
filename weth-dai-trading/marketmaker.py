@@ -30,7 +30,7 @@ logger.info ( f'pricetrigger = {100*pricetrigger:.2f}%' )
 requiredreturn = 1.0013
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 # Submit an ask immediately after the bid is filled.
-stoplimit = 0.99
+stoplimit = 0.913
 logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
 appliedleverage = 4
@@ -168,8 +168,8 @@ while True:
         if submittedask["order"]["status"] == "FILLED":
             fillprice = Decimal( submittedask["order"]["price"] )
             asknumber = submittedask["order"]["id"]
-            logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH.')
-            smsalert( f'Sold {amount:.4f} ETH for {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
+            logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH. Made {(fillprice-bideth)*amount:.4f} DAI.')
+            smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Made {(fillprice-bideth)*amount:.4f} DAI.')
             # End loop
             break
         else:
@@ -217,8 +217,8 @@ while True:
                     if submittedask["order"]["status"] == "FILLED":
                         fillprice = Decimal( submittedask["order"]["price"] )
                         asknumber = submittedask["order"]["id"]
-                        logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH.')
-                        smsalert( f'Sold {amount:.4f} ETH for {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
+                        logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH. Lost {(bideth-asketh)*amount:.4f} DAI.')
+                        smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Lost {(bideth-fillprice)*amount:.4f} DAI.')
                         # End loop
                         break
                 # The stop was trigger and filled
