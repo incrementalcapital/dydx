@@ -8,6 +8,6 @@ from credentials import client
 
 
 # Get dYdX account collateralization
-collateralization = client.eth.get_my_collateralization()
+collateralization = client.eth.solo.get_my_collateralization()
 
-print ( collateralization )
+print ( f'{collateralization*100:28.4f}%' )
