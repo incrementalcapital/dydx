@@ -31,6 +31,6 @@ ethvalue = ethbalance * ethprice
 daivalue = daibalance * daiprice
 
 # Display dYdX account balance information
-print ( f"                        ETH: {ethvalue:10.4f}" )
-print ( f"                       USDC: {usdbalance:10.4f}" )
-print ( f"                        DAI: {daivalue:10.4f}" )
+print (f'{ethvalue:28.4f} ETH')
+print (f'{usdbalance:28.4f} USD')
+print (f'{daivalue:28.4f} DAI')
