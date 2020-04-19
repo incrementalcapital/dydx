@@ -96,7 +96,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Display submission information to the console
-    logger.info ( f'Buying {amount:.4f} ETH at {bideth.quantize( Decimal( quotetick ) )} DAI/ETH.' )
+    logger.info ( f'Buying {amount:.4f} ETH at {bideth:.4f} DAI/ETH.' )
     smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount:.4f} ETH.' )
 
 
@@ -125,7 +125,7 @@ while True:
     # Ask
     try:
         # Submit order to dYdX
-        submission = postask( askprice.quantize( Decimal( quotetick ) ), quantity )
+        submission = postask( askprice, quantity )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -135,7 +135,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Display submission information to the console
-    logger.info ( f'Selling {quantity} ETH at {askprice.quantize( Decimal( quotetick ) )} DAI/ETH.' )
+    logger.info ( f'Selling {quantity} ETH at {askprice:.4f} DAI/ETH.' )
     smsalert( f'Bidding {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
 
@@ -143,7 +143,7 @@ while True:
     # Right now the dYdX Python client does not support market orders
     # The dYdX stop order is based on the oracle price and it is unwieldy
     sellthreshold = Decimal( bideth ) * Decimal( stoplimit )
-    logger.info( f'From this point forth, if the submitted ask is not filled and the price drops below {sellthreshold:10.4f} submit a stop limit order.')
+    logger.info( f'From this point forth, if the submitted ask is not filled and the price drops below {sellthreshold:.4f} DAI/ETH submit a stop limit order.')
     # Enter loop
     while True:
         # Check the status of the submitted ask
@@ -175,7 +175,7 @@ while True:
                 # Stop
                 try:
                     # Submit order to dYdX
-                    submission = postask( asketh.quantize( Decimal( quotetick ) ), quantity )
+                    submission = postask( asketh, quantity )
 
                 except Exception as e:
                     # Throw a critical error notice if anything funky occurs
@@ -185,7 +185,7 @@ while True:
                 jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.debug ( f'Order submission:\n{jsondata}' )
                 # Display submission information to the console
-                logger.info ( f'Selling {quantity:.4f} ETH at {asketh.quantize( Decimal( quotetick ) )} DAI/ETH.' )
+                logger.info ( f'Selling {quantity:.4f} ETH at {asketh:.4f} DAI/ETH.' )
                 smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
