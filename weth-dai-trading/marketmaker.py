@@ -33,7 +33,7 @@ logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 stoplimit = 0.99
 logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
-appliedleverage = 2
+appliedleverage = 1.02
 logger.info ( f'appliedleverage = {appliedleverage:.2f}X' )
 # The maximim leverage that can be applied going LONG is 5X.
 # This is established by dYdX (note that it is 4X for a SHORT)
@@ -86,7 +86,7 @@ while True:
     # Bid
     try:
         # Submit order to dYdX
-        submission = postbid( bideth, amount )
+        submission = postbid( bideth.quantize( Decimal( quotetick ) ), amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -125,7 +125,7 @@ while True:
     # Ask
     try:
         # Submit order to dYdX
-        submission = postask( askprice, quantity )
+        submission = postask( askprice.quantize( Decimal( quotetick ) ), quantity )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -175,7 +175,7 @@ while True:
                 # Stop
                 try:
                     # Submit order to dYdX
-                    submission = postask( asketh, quantity )
+                    submission = postask( asketh.quantize( Decimal( quotetick ) ), quantity )
 
                 except Exception as e:
                     # Throw a critical error notice if anything funky occurs
