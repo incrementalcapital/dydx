@@ -63,3 +63,9 @@ def creditavailable( leverage ):
     logger.debug ( f'Credit available to this dYdX account is: {availablecredit:10.4f} DAI.')
 
     return availablecredit
+
+if (__name__ == '__main__'):
+    availablecredit = creditavailable( 5 )
+    print ( f'This dYdX account has access to suffient credit to go LONG a maximum of {availablecredit:8.4f} DAI.' )
+    availablecredit = creditavailable( 4 )
+    print ( f'This dYdX account has access to suffient credit to go SHORT a maximum of {availablecredit:8.4f} DAI.' )
