@@ -88,9 +88,10 @@ while True:
     prices = bestorders( 'WETH-DAI', quotetick )
     bideth = Decimal( prices[3] )
     amount = Decimal( availablecredit ) / Decimal( prices[3] )
-    if Decimal( amount ) < consts.SMALL_TRADE_SIZE_WETH:
+    cutoff = consts.SMALL_TRADE_SIZE_WETH / (10 ** consts.DECIMALS_WETH)
+    if amount < cutoff:
         logger.debug ('Check account margin or leverage [presently {appliedleverage}X] used.')
-        logger.debug ( f'Insufficient collateral. The bid {amount:.4f} is below {consts.SMALL_TRADE_SIZE_WETH}.' )
+        logger.debug ( f'Insufficient collateral. The bid {amount:.4f} is below {cutoff} ETH.' )
         logger.info( f'Unable to provide liquidity for those shorting ETH... Going to sleep for 10 hours.\n\n\n\n' )
         smsalert( f'Invalid bid quantity [{amount:.4f} DAI].' )
         time.sleep(36000)
