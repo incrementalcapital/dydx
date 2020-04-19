@@ -100,7 +100,7 @@ while True:
     # Bid
     try:
         # Submit order to dYdX
-        logger.debug ( f'Bidding {bideth.quantize( quotetick )} DAI/ETH for {amount:.4f} ETH.' )
+        logger.debug ( f'Bidding at {bideth.quantize( quotetick )} DAI/ETH for {amount:.4f} ETH.' )
         submission = postbid( bideth.quantize( quotetick ), amount )
 
     except Exception as e:
@@ -120,7 +120,7 @@ while True:
         prices = bestorders( 'WETH-DAI', quotetick )
         topask = Decimal( prices[1] )
         topbid = Decimal( prices[0] )
-        logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
+        logger.debug( f'Bidding at {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
         # Check the status of the submitted bid
@@ -153,7 +153,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Report submission information via SMS
-    smsalert( f'Bidding {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
+    smsalert( f'Bidding at {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
 
     # Define stop limit sell order price
@@ -206,7 +206,7 @@ while True:
                 jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.debug ( f'Order submission:\n{jsondata}' )
                 # Report submission information via SMS
-                smsalert( f'Bidding {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
+                smsalert( f'Bidding at {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
                 while True:
