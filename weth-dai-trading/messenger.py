@@ -14,5 +14,5 @@ def smsalert( message ):
     # Send message via SMS.
     snsresponse = snsclient.publish( PhoneNumber='+15108045618', Message=message )
     responseout = json.dumps( snsresponse, sort_keys=True, indent=4, separators=(',', ': ') )
-    logger.debug ( responseout )
+    logger.debug ( f'Response to SNS Request:\n{responseout}' )
     # Log SMS execution details
