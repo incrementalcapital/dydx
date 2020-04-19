@@ -27,7 +27,7 @@ logger.info( f'Define execution parameters...' )
 pricetrigger = 0.9999
 logger.info ( f'pricetrigger = {100*pricetrigger:.2f}%' )
 # Submit a bid after a 1% drop in the ask price
-requiredreturn = 1.0013
+requiredreturn = 1.013
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 # Submit an ask immediately after the bid is filled.
 stoplimit = 0.913
