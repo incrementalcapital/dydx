@@ -10,14 +10,14 @@ from credentials import client
 
 
 # Get dYdX account collateralization
-collateralization = client.eth.get_my_collateralization()
+collateralization = client.eth.solo.get_my_collateralization()
 
 # Get latest index prices from oracles
-ethpricing = client.eth.get_oracle_price( 0 )
-daipricing = client.eth.get_oracle_price( 3 )
+ethpricing = client.eth.solo.get_oracle_price( 0 )
+daipricing = client.eth.solo.get_oracle_price( 3 )
 
 # Get dYdX account balances
-balances = client.eth.get_my_balances()
+balances = client.eth.solo.get_my_balances()
 
 # Disaggregate asset balances
 ethbalance = Decimal(balances[0] / (10**18))
