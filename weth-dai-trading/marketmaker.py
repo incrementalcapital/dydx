@@ -139,8 +139,8 @@ while True:
     # Ask
     try:
         # Submit order to dYdX
-        logger.debug ( f'Asking {askprice} DAI/ETH for {quantity:.4f} ETH.' )
-        submission = postask( askprice, quantity )
+        logger.debug ( f'Asking {askprice.quantize( quotetick )} DAI/ETH for {quantity:.4f} ETH.' )
+        submission = postask( askprice.quantize( quotetick ), quantity )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
@@ -171,14 +171,14 @@ while True:
             # Then check price
             time.sleep(5)
             prices = bestorders( 'WETH-DAI', quotetick )
-            topask = Decimal( prices[1] ).quantize( quotetick )
-            topbid = Decimal( prices[0] ).quantize( quotetick )
-            asketh = Decimal( prices[2] ).quantize( quotetick )
+            topask = Decimal( prices[1] )
+            topbid = Decimal( prices[0] )
+            asketh = Decimal( prices[2] )
             logger.debug ( f'The highest bid in the orderbook is {topbid-sellthreshold:.4f} DAI above the stop limit {sellthreshold:.4f}.' )
 
             # Exit loop if the top bid falls below the marker
             if Decimal( prices[0] ) < Decimal( sellthreshold ):
-                logger.info ( f'The highest bid in the orderbook [{topbid} DAI/ETH] just fell below the stop limit [{sellthreshold} DAI/ETH]')
+                logger.info ( f'The highest bid in the orderbook [{topbid:.4f} DAI/ETH] just fell below the stop limit [{sellthreshold:.4f} DAI/ETH]')
                 # Cancel the previously submitted ask first to avoid any undercapitalization errors.
                 logger.info ( "Cancelling order: %s", submittedask["order"]["id"] )
                 canceledask = client.cancel_order( hash=submission["order"]["id"] )
@@ -189,8 +189,8 @@ while True:
                 # Stop
                 try:
                     # Submit order to dYdX
-                    logger.debug ( f'Asking {asketh} DAI/ETH for {quantity:.4f} ETH to stop losses.' )
-                    submission = postask( asketh, quantity )
+                    logger.debug ( f'Asking {asketh.quantize( quotetick )} DAI/ETH for {quantity:.4f} ETH to stop losses.' )
+                    submission = postask( asketh.quantize( quotetick ), quantity )
 
                 except Exception as e:
                     # Throw a critical error notice if anything funky occurs
