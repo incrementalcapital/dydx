@@ -30,8 +30,8 @@ def creditavailable( leverage ):
     # They are returned in US dollar terms (USDC)
     daiusdprice = Decimal( daiusdorderbook["asks"][0]["price"] ) * 10**( consts.DECIMALS_DAI - consts.DECIMALS_USDC )
     ethusdprice = Decimal( ethusdorderbook["asks"][0]["price"] ) * 10**( consts.DECIMALS_WETH - consts.DECIMALS_USDC )
-    logger.debug( f'The oracles says 1 DAI is: {daiusdprice:10.4f} US dollars')
-    logger.debug( f'The oracles says 1 ETH is: {ethusdprice:10.4f} US dollars')
+    logger.debug( f'The best sale price for 1 DAI on dYdX is presently: {daiusdprice:10.4f} US dollars')
+    logger.debug( f'The best sale price for 1 ETH on dYdX is presently: {ethusdprice:10.4f} US dollars')
 
     # Determine overcollateralized collateral (USDC asset balance in DAI terms)
     # And DAI balance to determine the maximum amount of DAI borrowable
@@ -44,14 +44,33 @@ def creditavailable( leverage ):
     dydxaccount = Decimal(ethbalance) + Decimal(usdbalance) + Decimal(daibalance)
     totalmargin = Decimal(dydxaccount) / Decimal(minimumcollateralization)
     creditlimit = Decimal(totalmargin) * Decimal(leverage)
-    # Define pertinent DAI liabilities
+
+    # Define pertinent liabilities
+    liabilities = {}
     if Decimal( daibalance ) < 0:
-        liabilities = abs( daibalance )
+        liabilities['DAI'] = abs( daibalance )
     else:
-        liabilities = 0
-    logger.debug( f'This dYdX account has DAI liabilities of: {liabilities:10.4f} DAI')
+        liabilities['DAI'] = 0
+    logger.debug( f'This dYdX account has DAI liabilities of: {liabilities["DAI"]:10.4f} DAI')
+    # Define pertinent ETH liabilities
+    if Decimal( ethbalance ) < 0:
+        liabilities['ETH'] = abs( ethbalance )
+    else:
+        liabilities['ETH'] = 0
+    logger.debug( f'This dYdX account has ETH liabilities of: {liabilities["ETH"]:10.4f} DAI')
+    # Define pertinent USD liabilities
+    if Decimal( usdbalance ) < 0:
+        liabilities['USD'] = abs( usdbalance )
+    else:
+        liabilities['USD'] = 0
+    logger.debug( f'This dYdX account has USD liabilities of: {liabilities["USD"]:10.4f} DAI')
+    # Define pertinent total asset liabilities
+    totalliability = sum( liabilities.values() )
+    logger.debug( f'This dYdX account has a total liability of: {totalliability:10.4f} DAI')
+
+
     # Determine the available debt accessible to the dYdX account
-    availablecredit = Decimal(creditlimit) - Decimal(liabilities)
+    availablecredit = Decimal(creditlimit) - Decimal(totalliability)
     # Note: going long on ETH with DAI means having to remove the existing DAI liabilities in the calculation
     logger.debug ( f'This dYdX account has a balance of {dydxaccount:10.4f} [in DAI terms].')
     logger.debug ( f'Presently has {ethbalance:10.4f} ETH [a negative sign indicates debt].')
