@@ -84,9 +84,10 @@ while True:
     amount = Decimal(availablecredit) / Decimal(bideth)
 
     # Bid
+    bid = bideth.quantize( Decimal( quotetick ) )
     try:
         # Submit order to dYdX
-        submission = postbid( bideth.quantize( Decimal( quotetick ) ), amount )
+        submission = postbid( bid, amount )
 
     except Exception as e:
         # Throw a critical error notice if anything funky occurs
