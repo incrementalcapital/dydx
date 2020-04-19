@@ -68,7 +68,7 @@ while True:
         time.sleep(10)
         # Update prices
         prices = bestorders( 'WETH-DAI', quotetick )
-        topask = Decimal(prices[1])
+        topask = Decimal( prices[1] )
         # If the present price is below the trigger price this loop ends
     logger.info ( f'The lowest ask on the market [{topask:.4f} DAI/ETH] is less than (or equals) the trigger price [{marker:.4f} DAI/ETH]' )
 
@@ -80,8 +80,8 @@ while True:
     # Determine most competitive bid price and amount
     # Based on the debt remaining and present market values
     prices = bestorders( 'WETH-DAI', quotetick )
-    bideth = prices[3]
-    amount = Decimal(availablecredit) / Decimal(bideth)
+    bideth = Decimal( prices[3] )
+    amount = Decimal( availablecredit ) / Decimal( bideth )
 
     # Bid
     try:
@@ -104,8 +104,8 @@ while True:
     while True:
         # Give a status update on the get_orderbook
         prices = bestorders( 'WETH-DAI', quotetick )
-        topask = prices[1]
-        topbid = prices[0]
+        topask = Decimal( prices[1] )
+        topbid = Decimal( prices[0] )
         logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
