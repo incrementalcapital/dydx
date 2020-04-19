@@ -123,11 +123,14 @@ while True:
         logger.debug( f'Bidding {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
         # Give the bid placed five seconds to fill
         time.sleep(5)
-        # Get fills
-        lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
-        if lastfill["fills"][0]["orderId"] == submission["order"]["id"]:
-            logger.info ( 'Order %s was filled.', submission["order"]["id"])
-            smsalert( f'Bid {bideth*amount:.4f} DAI for {amount:.4f} ETH.')
+        # Check the status of the submitted bid
+        submittedbid = client.get_order( orderId=submission["order"]["id"] )
+        if submittedbid["order"]["status"] == "FILLED":
+            fillprice = Decimal( submittedbid["order"]["price"] )
+            bidnumber = submittedbid["order"]["id"]
+            logger.info ( f'Order {bidnumber} was filled at: {fillprice:.4f} DAI/ETH.')
+            smsalert( f'Bought {amount:.4f} ETH with {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
+            # End loop
             break
 
 
@@ -163,8 +166,11 @@ while True:
         # Check the status of the submitted ask
         submittedask = client.get_order( orderId=submission["order"]["id"] )
         if submittedask["order"]["status"] == "FILLED":
-            # Exit: End the loop and exit.
-            logger.info ( f'Order {submittedask["order"]["id"]} was filled at: {submittedask["order"]["price"]:.4f} DAI/ETH.')
+            fillprice = Decimal( submittedask["order"]["price"] )
+            asknumber = submittedask["order"]["id"]
+            logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH.')
+            smsalert( f'Sold {amount:.4f} ETH for {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
+            # End loop
             break
         else:
             # Sleep
@@ -206,13 +212,17 @@ while True:
                 while True:
                     # Give the stop placed five seconds to fill
                     time.sleep(5)
-                    # Get fills
-                    lastfill = client.get_my_fills(market=['WETH-DAI'],limit=1)
-                    if lastfill["fills"][0]["orderId"] == submission["order"]["id"]:
-                        logger.info ( 'Order %s was filled.', submission["order"]["id"])
-                        smsalert( f'Stop filled. Asked {bideth:.4f} DAI/ETH and sold {bideth*amount:.4f} DAI for {amount:.4f} ETH.')
+                    # Check the status of the submitted ask
+                    submittedask = client.get_order( orderId=submission["order"]["id"] )
+                    if submittedask["order"]["status"] == "FILLED":
+                        fillprice = Decimal( submittedask["order"]["price"] )
+                        asknumber = submittedask["order"]["id"]
+                        logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH.')
+                        smsalert( f'Sold {amount:.4f} ETH for {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
+                        # End loop
                         break
-
+                # The stop was trigger and filled
+                # Or the ask was filled
                 # Exit loop
                 break
 
