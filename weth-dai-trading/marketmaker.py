@@ -68,7 +68,6 @@ while True:
         if Decimal(topask) > Decimal(oldask):
             # Redefine trigger
             marker = Decimal( topask ) * Decimal ( pricetrigger )
-            continue
         logger.debug ( f'Best Ask [{topask:.4f}] > Trigger Price [{marker:.4f}]' )
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
@@ -96,6 +95,7 @@ while True:
         smsalert( f'Invalid bid quantity [{amount:.4f} DAI].' )
         time.sleep(36000)
         continue
+
 
     # Bid
     try:
