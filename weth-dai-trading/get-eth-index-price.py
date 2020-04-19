@@ -14,5 +14,5 @@ rawdata = client.eth.solo.get_oracle_price( consts.MARKET_WETH )
 pricedata = Decimal(rawdata) * Decimal( 10**(consts.DECIMALS_WETH) )
 indexprice = Decimal(pricedata)
 
-# Format balance using DECIMAL information for the asset
-print ( asset, "is" , indexprice.quantize( Decimal("0.0001") ), "dollars." )
+# Display formatted balance
+print ( f'{indexprice:28.5} USD/ETH' )
