@@ -58,23 +58,23 @@ while True:
     prices = bestorders( 'WETH-DAI', quotetick )
     topask = Decimal( prices[1] )
     marker = Decimal( topask ) * Decimal ( pricetrigger )
+    oldask = topask
     logger.info ( f'The lowest ask in the orderbook is {topask:.4f} DAI/ETH' )
     logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below {marker:.4f} DAI/ETH' )
     logger.info ( f'Enter a loop to monitor the market...' )
     # Loop until the ask drops below the trigger price
     while Decimal(topask) > Decimal(marker):
-        logger.debug ( f'Best Ask [{topask:.4f}] > Trigger Price [{marker:.4f}]' )
-        # Sleep ten seconds before checking updating the present price
-        time.sleep(10)
-        # Record old ask
-        oldask = topask
-        # Update prices
-        prices = bestorders( 'WETH-DAI', quotetick )
-        topask = Decimal( prices[1] )
         # If the present price is higher than the old ask
         if Decimal(topask) > Decimal(oldask):
             # Redefine trigger
             marker = Decimal( topask ) * Decimal ( pricetrigger )
+            continue
+        logger.debug ( f'Best Ask [{topask:.4f}] > Trigger Price [{marker:.4f}]' )
+        # Sleep ten seconds before checking updating the present price
+        time.sleep(10)
+        # Update prices
+        prices = bestorders( 'WETH-DAI', quotetick )
+        topask = Decimal( prices[1] )
         # If the present price is below the previously defined trigger price this loop essentially ends here
     logger.info ( f'The lowest ask on the market [{topask:.4f} DAI/ETH] is less than (or equals) the trigger price [{marker:.4f} DAI/ETH]' )
 
