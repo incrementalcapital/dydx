@@ -98,5 +98,5 @@ Then be sure to specify that SSL certificates are not required (i.e. **ssl_cert_
 An even better solution is to install a certificate authority (CA) bundle using before attempting to access mongodb on Atlas:
 
 ```bash
-open "/Applications/Python 3.6/Install Certificates.command"
+open "/Applications/Python 3.7/Install Certificates.command"
 ```
