@@ -111,7 +111,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Report submission information via SMS
-    smsalert( f'Bidding {bideth*amount:.4f} DAI for {amount:.4f} ETH.' )
+    smsalert( f'Bidding for {amount:.4f} ETH with {bideth*amount:.4f} DAI.' )
 
 
     # Loop until the bid is filled
@@ -153,7 +153,7 @@ while True:
     jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
     logger.debug ( f'Order submission:\n{jsondata}' )
     # Report submission information via SMS
-    smsalert( f'Bidding at {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
+    smsalert( f'Asking {askprice*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
 
     # Define stop limit sell order price
@@ -170,7 +170,7 @@ while True:
             asknumber = submittedask["order"]["id"]
             logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH. Made {(fillprice-bideth)*amount:.4f} DAI.')
             smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Made {(fillprice-bideth)*amount:.4f} DAI.')
-            # End loop
+            # Ask filled... End loop
             break
         else:
             # Sleep
@@ -206,7 +206,7 @@ while True:
                 jsondata = json.dumps( submission, sort_keys=True, indent=4, separators=(',', ': ') )
                 logger.debug ( f'Order submission:\n{jsondata}' )
                 # Report submission information via SMS
-                smsalert( f'Bidding at {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
+                smsalert( f'Asking {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
                 while True:
@@ -219,34 +219,30 @@ while True:
                         asknumber = submittedask["order"]["id"]
                         logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH. Lost {(bideth-asketh)*amount:.4f} DAI.')
                         smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Lost {(bideth-fillprice)*amount:.4f} DAI.')
-                        # End loop
+                        # Stop filled... End loop.
                         break
-            # The stop was trigger and filled
-            # Or the ask was filled
-            # Exit loop
-            break
 
 
-        # Sleep
-        # Give the blockchain sufficient time
-        time.sleep(120)
-        # Gave two minutes to write the transaction
+    # Sleep
+    # Give the blockchain sufficient time
+    time.sleep(120)
+    # Gave two minutes to write the transaction
 
-        # Withdraw DAI gains if any
-        # Check dYdX DAI account balance
-        balances = client.eth.get_my_balances()
-        newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
-        logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
-        smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
-        # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
-        if Decimal(newdaibalance) > 2:
-            withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
-            # Display deposit confirmation
-            logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
-            receipt = client.eth.get_receipt( withdrawalhash )
-            web3out = Web3.toJSON( receipt )
-            logger.debug ( web3out )
-            logger.info ( 'Done.' )
+    # Withdraw DAI gains if any
+    # Check dYdX DAI account balance
+    balances = client.eth.get_my_balances()
+    newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
+    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
+    smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
+    # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
+    if Decimal(newdaibalance) > 2:
+        withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
+        # Display deposit confirmation
+        logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+        receipt = client.eth.get_receipt( withdrawalhash )
+        web3out = Web3.toJSON( receipt )
+        logger.debug ( web3out )
+        logger.info ( 'Done.' )
 
 
-        logger.info( f'End of liquidity provision.\n\n\n\n' )
+    logger.info( f'End of liquidity provision.\n\n\n\n' )
