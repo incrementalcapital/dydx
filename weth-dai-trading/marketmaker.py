@@ -33,7 +33,7 @@ logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 stoplimit = 0.913
 logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
-appliedleverage = 4
+appliedleverage = 4.99
 logger.info ( f'appliedleverage = {appliedleverage:.2f}X' )
 # The maximim leverage that can be applied going LONG is 5X.
 # This is established by dYdX (note that it is 4X for a SHORT)
