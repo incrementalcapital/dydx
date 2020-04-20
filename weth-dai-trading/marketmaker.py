@@ -33,7 +33,7 @@ logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 stoplimit = 0.913
 logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
-appliedleverage = 4
+appliedleverage = 5
 logger.info ( f'appliedleverage = {appliedleverage:.2f}X' )
 # The maximim leverage that can be applied going LONG is 5X.
 # This is established by dYdX (note that it is 4X for a SHORT)
@@ -221,32 +221,32 @@ while True:
                         smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Lost {(bideth-fillprice)*amount:.4f} DAI.')
                         # End loop
                         break
-                # The stop was trigger and filled
-                # Or the ask was filled
-                # Exit loop
-                break
+            # The stop was trigger and filled
+            # Or the ask was filled
+            # Exit loop
+            break
 
 
-    # Sleep
-    # Give the blockchain sufficient time
-    time.sleep(120)
-    # Gave two minutes to write the transaction
+        # Sleep
+        # Give the blockchain sufficient time
+        time.sleep(120)
+        # Gave two minutes to write the transaction
 
-    # Withdraw DAI gains if any
-    # Check dYdX DAI account balance
-    balances = client.eth.get_my_balances()
-    newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
-    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
-    smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
-    # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
-    if Decimal(newdaibalance) > 2:
-        withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
-        # Display deposit confirmation
-        logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
-        receipt = client.eth.get_receipt( withdrawalhash )
-        web3out = Web3.toJSON( receipt )
-        logger.debug ( web3out )
-        logger.info ( 'Done.' )
+        # Withdraw DAI gains if any
+        # Check dYdX DAI account balance
+        balances = client.eth.get_my_balances()
+        newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
+        logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
+        smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
+        # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
+        if Decimal(newdaibalance) > 2:
+            withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
+            # Display deposit confirmation
+            logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+            receipt = client.eth.get_receipt( withdrawalhash )
+            web3out = Web3.toJSON( receipt )
+            logger.debug ( web3out )
+            logger.info ( 'Done.' )
 
 
-    logger.info( f'End of liquidity provision.\n\n\n\n' )
+        logger.info( f'End of liquidity provision.\n\n\n\n' )
