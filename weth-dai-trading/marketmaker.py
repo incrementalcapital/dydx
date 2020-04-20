@@ -230,7 +230,7 @@ while True:
 
         # Withdraw DAI gains if any
         # Check dYdX DAI account balance
-        balances = client.eth.get_my_balances()
+        balances = client.eth.solo.get_my_balances()
         newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
         logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
         smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
