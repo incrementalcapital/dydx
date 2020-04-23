@@ -231,14 +231,14 @@ while True:
     # Withdraw DAI gains if any
     # Check dYdX DAI account balance
     balances = client.eth.solo.get_my_balances()
-    newdaibalance = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
-    logger.info( f'The balance of DAI in the dYdX account is now {newdaibalance:.4f} DAI.' )
-    smsalert( f'DAI balance changed by {newdaibalance - daibalance:.4f} DAI because of the last trade.' )
+    daifunds = Decimal( balances[consts.MARKET_DAI] / (10**consts.DECIMALS_DAI) )
+    logger.info( f'The balance of DAI in the dYdX account is now {daifunds:.4f} DAI.' )
     # Since withdrawals go to the blockchain and need GAS, only withdrawal if gains exceed $2
-    if Decimal(newdaibalance) > 2:
+    if Decimal(daifunds) > 2:
+        smsalert( f'The balance of DAI funds is greater than 2 DAI. Withdrawing {daifunds:.4f} DAI.' )
         withdrawalhash = client.eth.solo.withdraw_to_zero( market=consts.MARKET_DAI )
         # Display deposit confirmation
-        logger.info ( f'Depositing {newdaibalance:10.4f} DAI to the wallet associated with this dYdX account...' )
+        logger.info ( f'Depositing {daifunds:10.4f} DAI to the wallet associated with this dYdX account...' )
         receipt = client.eth.get_receipt( withdrawalhash )
         web3out = Web3.toJSON( receipt )
         logger.debug ( web3out )
