@@ -54,20 +54,21 @@ quotetick = Decimal( markets["markets"]["WETH-DAI"]["minimumTickSize"] )
 while True:
     logger.info( f'Begin providing liquidity for those shorting ETH...' )
 
-    # Get best (top) ask and calculate trigger (marker)
+    # Get best (top) ask, make it an upwardly sliding peg (askpeg), and calculate trigger (marker)
     prices = bestorders( 'WETH-DAI', quotetick )
     topask = Decimal( prices[1] )
-    marker = Decimal( topask ) * Decimal ( pricetrigger )
-    oldask = topask
+    askpeg = topask
+    marker = Decimal( askpeg ) * Decimal ( pricetrigger )
     logger.info ( f'The lowest ask in the orderbook is {topask:.4f} DAI/ETH' )
     logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below {marker:.4f} DAI/ETH' )
     logger.info ( f'Enter a loop to monitor the market...' )
     # Loop until the ask drops below the trigger price
     while Decimal(topask) > Decimal(marker):
         # If the present price is higher than the old ask
-        if Decimal(topask) > Decimal(oldask):
-            # Redefine trigger
-            marker = Decimal( topask ) * Decimal ( pricetrigger )
+        if Decimal(topask) > Decimal(askpeg):
+            # Redefine the ask peg and recalculate the trigger
+            askpeg = topask
+            marker = Decimal( askpeg ) * Decimal ( pricetrigger )
         logger.debug ( f'Best Ask [{topask:.4f}] > Trigger Price [{marker:.4f}]' )
         # Sleep ten seconds before checking updating the present price
         time.sleep(10)
