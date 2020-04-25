@@ -24,9 +24,9 @@ from creditcalculator import creditavailable
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 logger.info( f'Define execution parameters...' )
-pricetrigger = 0.9999
+pricetrigger = 0.9934
 logger.info ( f'pricetrigger = {100*pricetrigger:.2f}%' )
-# Submit a bid after a 1% drop in the ask price
+# Submit a bid after a 76 basis point drop in the ask price
 requiredreturn = 1.013
 logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
 # Submit an ask immediately after the bid is filled.
@@ -180,7 +180,10 @@ while True:
             topask = Decimal( prices[1] )
             topbid = Decimal( prices[0] )
             asketh = Decimal( prices[2] )
-            logger.debug ( f'The highest bid in the orderbook is {topbid-sellthreshold:.4f} DAI above the stop limit {sellthreshold:.4f}.' )
+            ethroa = 100 * ( topbid - bideth ) / bideth
+            ethroe = ethroa * appliedleverage
+            unreal = ( topbid - bideth ) * amount
+            logger.debug ( f'Market selling {amount:.4f} ETH now returns {unreal:.4f} DAI [{ethroe:.2f}%] because the highest bid in the orderbook is {topbid:.4f} DAI/ETH. This is {topbid-sellthreshold:.4f} DAI/ETH above the stop limit [{sellthreshold:.4f}].' )
 
             # Exit loop if the top bid falls below the marker
             if Decimal( prices[0] ) < Decimal( sellthreshold ):
