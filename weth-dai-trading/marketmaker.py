@@ -182,7 +182,7 @@ while True:
             topbid = Decimal( prices[0] )
             asketh = Decimal( prices[2] )
             ethroa = 100 * ( topbid - bideth ) / bideth
-            ethroe = ethroa * appliedleverage
+            ethroe = ethroa * Decimal(appliedleverage)
             unreal = ( topbid - bideth ) * amount
             logger.debug ( f'Market selling {amount:.4f} ETH now returns {unreal:.4f} DAI [{ethroe:.2f}%] because the highest bid in the orderbook is {topbid:.4f} DAI/ETH. This is {topbid-sellthreshold:.4f} DAI/ETH above the stop limit [{sellthreshold:.4f}].' )
 
