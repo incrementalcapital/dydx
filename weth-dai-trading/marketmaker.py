@@ -245,8 +245,10 @@ while True:
         logger.info ( f'Depositing {daifunds:10.4f} DAI to the wallet associated with this dYdX account...' )
         receipt = client.eth.get_receipt( withdrawalhash )
         web3out = Web3.toJSON( receipt )
-        logger.debug ( web3out )
-        logger.info ( 'Done.' )
+        strings = str( web3out )
+        dataout = json.loads( strings )
+        jsonout = json.dumps( dataout, sort_keys=True, indent=4, separators=(',', ': ') )
+        logger.debug ( jsonout )
 
 
     logger.info( f'End of liquidity provision.\n\n\n\n' )
