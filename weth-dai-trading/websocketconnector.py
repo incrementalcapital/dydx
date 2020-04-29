@@ -203,7 +203,26 @@ async def websocketchannelsubscription(
             await websocketaskpricehandler( websocket, subscriptionrequest, orderpricelevelexit )
 
 
-async def monitorwethdaiorderbookchannel(
+async def checkorderfulfillment(
+        orderidentification: str,
+        subscriptionrequest: dict
+    ) -> None:
+    # Initialize channel requested toggle.
+    # Define the URL of the websocket server.
+    channelsubscription = False
+    url = f'wss://api.dydx.exchange/v1/ws'
+    logger.debug( f'Using websockets library to connect to {url}...' )
+
+    # Connect websocket.
+    async with websockets.connect( url ) as websocket:
+        if not channelsubscription:
+            logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
+            await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
+            channelsubscription == True
+        await filledorderschannelhandler( websocket, subscriptionrequest, orderidentification )
+
+
+async def pricetriggerorderbookstream(
         orderexecutionstate: str,
         orderpricelevelexit: str,
     ) ->  None:
@@ -227,5 +246,29 @@ async def monitorwethdaiorderbookchannel(
     await websocketchannelsubscription(
             orderexecutionstate = orderstatus,
             orderpricelevelexit = exittrigger,
+            subscriptionrequest = requesttext
+    )
+
+
+async def ordersfulfilledstream(
+        id: str
+    ) ->  None:
+    # Define the order identifier.
+    ordernumber = id
+    # Create a request to subscribe to the orderbook channel.
+    requesttext = {
+        "subscribe": {
+            "type": "subscribe",
+            "channel": "orders",
+            "id": walletaddress
+        },
+        "unsubscribe": {
+            "type": "unsubscribe",
+            "channel": "orders",
+            "id": walletaddress
+        }
+    }
+    await checkorderfulfillment(
+            orderidentification = ordernumber,
             subscriptionrequest = requesttext
     )
