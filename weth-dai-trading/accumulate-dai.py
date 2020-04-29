@@ -32,7 +32,8 @@ logger.info( f'Define execution parameters...' )
 pricetrigger = 0.0076
 logger.info ( f'pricetrigger = {100*pricetrigger:.2f}% decrease in the price of ETH.' )
 # Submit a bid after a 76 basis point drop in the ask price
-logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}% increase in the price of ETH.' )
+requiredreturn = 0.013
+logger.info ( f'requiredreturn = {100*requiredreturn:.2f}% increase in the price of ETH.' )
 # Submit an ask immediately after the bid is filled.
 stoplimit = 0.088
 logger.info ( f'stoplimit = {100*stoplimit:.2f}% decrease in the price of ETH.' )
