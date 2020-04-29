@@ -4,6 +4,8 @@ import logging
 import websockets
 from decimal import Decimal
 
+from credentials import walletaddress
+
 from logger import logger
 
 
