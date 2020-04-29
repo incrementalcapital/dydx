@@ -26,7 +26,7 @@ async def websocketaskpricehandler(
             if "updates" not in dictionary["contents"]:
                 # Get the best ask price from dYdX initial response.
                 minimumask = dictionary["contents"]["asks"][0]["price"]
-                triggerask = Decimal(maximumask) * ( 1 + Decimal(orderpricelevelexit) )
+                triggerask = Decimal(minimumask) * ( 1 + Decimal(orderpricelevelexit) )
                 if triggerask < triggering:
                     triggering = triggerask
                 logger.debug( f'initial information received... [trigger: {triggering:.2f} DAI/ETH] the lowest ask in the orderbook is: {Decimal(minimumask):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
@@ -62,7 +62,7 @@ async def websocketaskpricehandler(
                     # Rank asks and determine the lowest ask in the orderbook.
                     askranking = [Decimal(order["price"]) for order in marketdata]
                     minimumask = min(askranking)
-                    triggerask = Decimal(maximumask) * ( 1 + Decimal(orderpricelevelexit) )
+                    triggerask = Decimal(minimumask) * ( 1 + Decimal(orderpricelevelexit) )
                     if triggerask < triggering:
                         triggering = triggerask
 
