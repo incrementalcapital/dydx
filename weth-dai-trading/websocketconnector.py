@@ -139,6 +139,7 @@ async def websocketbidpricehandler(
                             killsocket = True
 
 
+async def filledorderschannelhandler(
 async def channelsubscriptionhandler(
         websocket: websockets.WebSocketClientProtocol,
         subscriptionrequest: dict
