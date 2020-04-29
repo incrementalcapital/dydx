@@ -140,6 +140,38 @@ async def websocketbidpricehandler(
 
 
 async def filledorderschannelhandler(
+        websocket: websockets.WebSocketClientProtocol,
+        subscriptionrequest: dict,
+        orderidentification: str
+    ) -> None:
+    killsocket = False
+    async for textoutput in websocket:
+        dictionary = json.loads( textoutput )
+        # Determine whether messages are updates.
+        if "contents" in dictionary:
+            # Handle dYdX initial response.
+            if "orders" in dictionary["contents"]:
+                # Check orders in dYdX initial response for filling of the order id specified.
+                for order in dictionary["contents"]["orders"]:
+                    if order["id"] == orderidentification and order["status"] == "FILLED":
+                        killsocket = True
+            # Handle dYdX update response for a filled order.
+            if "order" in dictionary["contents"]:
+                order = dictionary["contents"]["order"]
+                if order["id"] == orderidentification and order["status"] == "FILLED":
+                    killsocket = True
+
+            # Exit loop if the order was filled.
+            if killsocket:
+                logger.debug( f'The order {orderidentification} was filled.' )
+                logger.debug( f'Sending request to unsubscribe: {subscriptionrequest["unsubscribe"]}' )
+                await channelsubscriptionhandler( websocket, subscriptionrequest["unsubscribe"] )
+
+                logger.debug( f'Closing websocket connection...' )
+                await websocket.close(code=1000, reason='order filled.')
+                killsocket = False
+
+
 async def channelsubscriptionhandler(
         websocket: websockets.WebSocketClientProtocol,
         subscriptionrequest: dict
