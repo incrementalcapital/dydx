@@ -29,14 +29,14 @@ broadcaster = 'api.dydx.exchange/v1/ws'
 # In addition, define target (mimimum) collateralization ratio and maximum leverage
 # Note: to make a bid without waiting for the prices to fall, set the price trigger to 1
 logger.info( f'Define execution parameters...' )
-pricetrigger = 0.9934
-logger.info ( f'pricetrigger = {100*pricetrigger:.2f}%' )
+pricetrigger = 0.0076
+logger.info ( f'pricetrigger = {100*pricetrigger:.2f}% decrease in the price of ETH.' )
 # Submit a bid after a 76 basis point drop in the ask price
 requiredreturn = 1.013
-logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}%' )
+logger.info ( f'requiredreturn = {100*(requiredreturn-1):.2f}% increase in the price of ETH.' )
 # Submit an ask immediately after the bid is filled.
-stoplimit = 0.913
-logger.info ( f'stoplimit = {100*stoplimit:.2f}%' )
+stoplimit = 0.088
+logger.info ( f'stoplimit = {100*stoplimit:.2f}% decrease in the price of ETH.' )
 # Break out of a loop waiting for the profitable ask to fill if the stop limit is triggered.
 appliedleverage = 4.75
 logger.info ( f'appliedleverage = {appliedleverage:.2f}X' )
@@ -63,7 +63,7 @@ while True:
     prices = bestorders( 'WETH-DAI', quotetick )
     topask = Decimal( prices[1] )
     askpeg = topask
-    marker = Decimal( askpeg ) * Decimal ( pricetrigger )
+    marker = Decimal( askpeg ) * ( 1 - Decimal ( pricetrigger ) )
     logger.info ( f'The lowest ask in the orderbook is {topask:.4f} DAI/ETH' )
     logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below {marker:.4f} DAI/ETH' )
     logger.info ( f'Enter a loop to monitor the market...' )
@@ -138,7 +138,7 @@ while True:
     # Define stop limit sell order price
     # Right now the dYdX Python client does not support market orders
     # The dYdX stop order is based on the oracle price and it is unwieldy
-    sellthreshold = Decimal( bideth ) * Decimal( stoplimit )
+    sellthreshold = Decimal( bideth ) * ( 1 - Decimal( stoplimit ) )
     logger.info( f'From this point forth, if the submitted ask is not filled and the price drops below {sellthreshold:.4f} DAI/ETH submit a stop limit order.')
     # Enter loop
     while True:
