@@ -18,7 +18,7 @@ from messenger import smsalert
 from credentials import client
 from orderer import bestorders
 from creditcalculator import creditavailable
-from websocketconnector import ordersfulfilledstream
+from websocketconnector import checkorderfulfillment
 from websocketconnector import pricetriggerorderbookstream
 
 
