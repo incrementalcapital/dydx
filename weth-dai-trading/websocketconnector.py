@@ -217,7 +217,7 @@ async def websocketchannelsubscription(
             await websocketaskpricehandler( websocket, subscriptionrequest, orderpricelevelexit )
 
 
-async def checkorderfulfillment(
+async def orderfulfillmentwebsocketconnection(
         orderidentification: str,
         subscriptionrequest: dict
     ) -> None:
@@ -264,7 +264,7 @@ async def pricetriggerorderbookstream(
     )
 
 
-async def ordersfulfilledstream(
+async def checkorderfulfillment(
         id: str
     ) ->  None:
     # Define the order identifier.
@@ -282,7 +282,7 @@ async def ordersfulfilledstream(
             "id": walletaddress
         }
     }
-    await checkorderfulfillment(
+    await orderfulfillmentwebsocketconnection(
             orderidentification = ordernumber,
             subscriptionrequest = requesttext
     )
