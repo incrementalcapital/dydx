@@ -18,7 +18,8 @@ from messenger import smsalert
 from credentials import client
 from orderer import bestorders
 from creditcalculator import creditavailable
-from websocketconnector import monitorwethdaiorderbookchannel
+from websocketconnector import ordersfulfilledstream
+from websocketconnector import pricetriggerorderbookstream
 
 
 # Specify websocket server (wss protocol assumed)
@@ -67,7 +68,7 @@ while True:
     logger.info ( f'To trigger a bid, the lowest ask in the orderbook must fall below {marker:.4f} DAI/ETH' )
     logger.info ( f'Enter a loop to monitor the market...' )
     # Loop until the ask drops below the trigger price.
-    asyncio.run( monitorwethdaiorderbookchannel( "bids", marker ) )
+    asyncio.run( pricetriggerorderbookstream( "bids", marker ) )
 
 
     # Get credit available
@@ -107,23 +108,9 @@ while True:
 
 
     # Loop until the bid is filled
-    while True:
-        # Give a status update on the get_orderbook
-        prices = bestorders( 'WETH-DAI', quotetick )
-        topask = Decimal( prices[1] )
-        topbid = Decimal( prices[0] )
-        logger.debug( f'Bidding at {bideth:.4f} DAI/ETH. The highest bid now is {topbid:.4f} DAI/ETH and the cheapest ask is {topask:.4f} DAI/ETH.')
-        # Give the bid placed five seconds to fill
-        time.sleep(5)
-        # Check the status of the submitted bid
-        submittedbid = client.get_order( orderId=submission["order"]["id"] )
-        if submittedbid["order"]["status"] == "FILLED":
-            fillprice = Decimal( submittedbid["order"]["price"] )
-            bidnumber = submittedbid["order"]["id"]
-            logger.info ( f'Order {bidnumber} was filled at: {fillprice:.4f} DAI/ETH.')
-            smsalert( f'Bought {amount:.4f} ETH with {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
-            # End loop
-            break
+    asyncio.run( ordersfulfilledstream( submission["order"]["id"] ) )
+    logger.info ( f'Order {submission["order"]["id"]} was filled at: {fillprice:.4f} DAI/ETH.')
+    smsalert( f'Bought {amount:.4f} ETH with {bideth*amount:.4f} DAI at {fillprice:.4f} DAI/ETH.')
 
 
     # Place ask to close the position opened by the bid
@@ -204,18 +191,9 @@ while True:
                 smsalert( f'Asking {asketh*quantity:.4f} DAI for {quantity:.4f} ETH.' )
 
                 # Loop until the stop is filled
-                while True:
-                    # Give the stop placed five seconds to fill
-                    time.sleep(5)
-                    # Check the status of the submitted ask
-                    submittedask = client.get_order( orderId=submission["order"]["id"] )
-                    if submittedask["order"]["status"] == "FILLED":
-                        fillprice = Decimal( submittedask["order"]["price"] )
-                        asknumber = submittedask["order"]["id"]
-                        logger.info ( f'Order {asknumber} was filled at: {fillprice:.4f} DAI/ETH. Lost {(bideth-asketh)*amount:.4f} DAI.')
-                        smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Lost {(bideth-fillprice)*amount:.4f} DAI.')
-                        # Stop filled... End loop.
-                        break
+                asyncio.run( ordersfulfilledstream( submission["order"]["id"] ) )
+                logger.info ( f'Order {submission["order"]["id"]} was filled at: {fillprice:.4f} DAI/ETH. Lost {(bideth-asketh)*amount:.4f} DAI.')
+                smsalert( f'Sold {amount:.4f} ETH for {fillprice*amount:.4f} DAI at {fillprice:.4f} DAI/ETH. Lost {(bideth-fillprice)*amount:.4f} DAI.')
 
 
     # Sleep
