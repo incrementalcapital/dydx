@@ -14,9 +14,10 @@ async def websocketaskpricehandler(
         subscriptionrequest: dict,
         orderpricelevelexit: str
     ) -> None:
-    killsocket = False
     marketdata = {}
+    killsocket = False
     minimumask = float("inf")
+    triggering = float("inf")
     async for textoutput in websocket:
         dictionary = json.loads( textoutput )
         # Determine whether messages are updates.
@@ -25,7 +26,10 @@ async def websocketaskpricehandler(
             if "updates" not in dictionary["contents"]:
                 # Get the best ask price from dYdX initial response.
                 minimumask = dictionary["contents"]["asks"][0]["price"]
-                logger.debug( f'initial information received... the lowest ask in the orderbook is: {Decimal(minimumask):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
+                triggerask = Decimal(maximumask) * ( 1 + Decimal(orderpricelevelexit) )
+                if triggerask < triggering:
+                    triggering = triggerask
+                logger.debug( f'initial information received... [trigger: {trigger:.2f} DAI/ETH] the lowest ask in the orderbook is: {Decimal(minimumask):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
                 # Load orderbook into updateable market data dictionary.
                 marketdata = dictionary["contents"]["asks"]
             else:
@@ -58,12 +62,15 @@ async def websocketaskpricehandler(
                     # Rank asks and determine the lowest ask in the orderbook.
                     askranking = [Decimal(order["price"]) for order in marketdata]
                     minimumask = min(askranking)
+                    triggerask = Decimal(maximumask) * ( 1 + Decimal(orderpricelevelexit) )
+                    if triggerask < triggering:
+                        triggering = triggerask
 
                     # Display price updates.
-                    logger.debug( f'updated information received... the lowest ask in the orderbook is: {Decimal(minimumask):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
+                    logger.debug( f'updated information received... [trigger: {trigger:.2f} DAI/ETH] the lowest ask in the orderbook is: {Decimal(minimumask):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
 
                     # Exit if the maximum ask drops below the exit trigger.
-                    if minimumask > Decimal(orderpricelevelexit):
+                    if minimumask > Decimal(triggering):
                         if not killsocket:
                             logger.debug( f'The lowest ask in the orderbook just exceed {orderpricelevelexit} DAI/ETH.' )
                             logger.debug( f'Sending request to unsubscribe: {subscriptionrequest["unsubscribe"]}' )
@@ -79,9 +86,10 @@ async def websocketbidpricehandler(
         subscriptionrequest: dict,
         orderpricelevelexit: str
     ) -> None:
-    killsocket = False
     marketdata = {}
+    killsocket = False
     maximumbid = float("-inf")
+    triggering = float("-inf")
     async for textoutput in websocket:
         dictionary = json.loads( textoutput )
         # Determine whether messages are updates.
@@ -90,7 +98,10 @@ async def websocketbidpricehandler(
             if "updates" not in dictionary["contents"]:
                 # Get the best bid price from dYdX initial response.
                 maximumbid = dictionary["contents"]["bids"][0]["price"]
-                logger.debug( f'initial information received... the highest bid in the orderbook is: {Decimal(maximumbid):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
+                triggerbid = Decimal(maximumbid) * ( 1 - Decimal(orderpricelevelexit) )
+                if triggerbid > triggering:
+                    triggering = triggerbid
+                logger.debug( f'initial information received... [trigger: {trigger:.2f} DAI/ETH] the highest bid in the orderbook is: {Decimal(maximumbid):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
                 # Load orderbook into updateable market data dictionary.
                 marketdata = dictionary["contents"]["bids"]
             else:
@@ -123,12 +134,15 @@ async def websocketbidpricehandler(
                     # Rank bids and determine the highest bid in the orderbook.
                     bidranking = [Decimal(order["price"]) for order in marketdata]
                     maximumbid = max(bidranking)
+                    triggerbid = Decimal(maximumbid) * ( 1 - Decimal(orderpricelevelexit) )
+                    if triggerbid > triggering:
+                        triggering = triggerbid
 
                     # Display price updates.
-                    logger.debug( f'updated information received... the highest bid in the orderbook is: {Decimal(maximumbid):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
+                    logger.debug( f'updated information received... [trigger: {trigger:.2f} DAI/ETH] the highest bid in the orderbook is: {Decimal(maximumbid):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
 
                     # Exit if the maximum bid drops below the exit trigger.
-                    if maximumbid < Decimal(orderpricelevelexit):
+                    if maximumbid < Decimal(triggering):
                         if not killsocket:
                             logger.debug( f'The highest bid in the orderbook just fell below {orderpricelevelexit} DAI/ETH.' )
                             logger.debug( f'Sending request to unsubscribe: {subscriptionrequest["unsubscribe"]}' )
