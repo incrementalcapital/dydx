@@ -7,8 +7,8 @@ To get these scripts working:
 1. Login to the AWS console, fire up an EC2 instance, and secure shell it to the instance.
 2. Make sure you have python3 installed.
 3. Clone this repository.
-4. Prepare your wallet credentials by moving the example module (example-credentials.py) to credentials.py.
-5. Use vi to edit the credentials.py module and add the private key of your wallet.
+4. Prepare your wallet credentials by copying the sample module (examples/credentials.py) to credentials.py.
+5. Use vi to edit the credentials.py module. Add the public (walletaddress) and private keys of your wallet.
 6. Get PIP if it is not present.
 7. Download dYdX's Python stuff.
 
@@ -18,7 +18,7 @@ Essentially, these steps would look something like this:
 sudo apt update # update apt
 python3 --version # confirm that python3 is installed (it is by default on Ubuntu Server 18.04 LTS)
 git clone https://github.com/munair/dydx.git # download repository
-mv example-credentials.py credentials.py # prepare credentials
+cp examples/credentials.py credentials.py # prepare credentials
 vi credentials.py # insert private key
 pip3 --version || sudo apt install python3-pip -y # check for pip3 and install it if not found
 pip3 install dydx-python # install dydx libraries
@@ -69,13 +69,13 @@ py testsms.py
 
 To use MongoDB to facilitate gathering information on the performance of trades executed:
 
-1. Rename the example-dbconnection.py file to dbconnection.py.
+1. Copy the example/dbconnection.py file to dbconnection.py.
 2. Edit that file configuration to provide an alias/identifier for the dYdX account.
 3. Add the credentials and connection string to the mongodb server.
 4. Install pymongo and dnspython using pip3.
 
 ```bash
-mv example-dbconnection.py dbconnection.py
+cp examples/dbconnection.py dbconnection.py
 vi dbconnection.py
 pip3 install pymongo
 pip3 install dnspython
