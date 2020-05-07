@@ -143,6 +143,8 @@ async def minimumasksmessagehandler(
                             elif Decimal(minimumask) > upperlimit:
                                 logger.debug( f'The lowest ask [{Decimal(minimumask):.2f} DAI/ETH] in the orderbook just exceeded the upper price bound [{upperlimit:.2f} DAI/ETH].' )
                                 killsocket = True
+                        # Exit loop if there are no appreciation and depreciation triggers.
+                        if not Decimal(percentdepreciation) and not Decimal(percentappreciation): killsocket = True
 
                     # Run the killsocket routine just once.
                     if killsocket:
