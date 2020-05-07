@@ -59,7 +59,7 @@ async def channelsubscriptionhandler(
     await websocket.send( requestjson )
 
 
-async def constructorderfulfillmentwebsocket(
+async def orderfulfillmentwebsocket(
         orderidentification: str,
         subscriptionrequest: dict
     ) -> None:
@@ -78,7 +78,7 @@ async def constructorderfulfillmentwebsocket(
         return await orderfulfillmentstatushandler( websocket, subscriptionrequest, orderidentification )
 
 
-async def checkorderfulfillment(
+async def validateorderfulfillment(
         id: str
     ) ->  None:
     # Define the order identifier.
@@ -96,7 +96,7 @@ async def checkorderfulfillment(
             "id": walletaddress
         }
     }
-    return await constructorderfulfillmentwebsocket(
+    return await orderfulfillmentwebsocket(
             orderidentification = ordernumber,
             subscriptionrequest = requesttext
     )
