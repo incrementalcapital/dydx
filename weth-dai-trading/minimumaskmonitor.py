@@ -234,10 +234,6 @@ if __name__ == "__main__":
     depreciationtrigger = '0.001'
     initialmaximumprice = '0'
     appreciationtrigger = '0.001'
-    logger.debug( f'initialminimumprice: {initialminimumprice} DAI/ETH.' )
-    logger.debug( f'initialmaximumprice: {initialmaximumprice} DAI/ETH.' )
-    logger.debug( f'depreciationtrigger: {Decimal(depreciationtrigger)*100:.2f} %.' )
-    logger.debug( f'appreciationtrigger: {Decimal(appreciationtrigger)*100:.2f} %.' )
     try:
         asyncio.run( monitorminimumasks( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
     except KeyboardInterrupt:
