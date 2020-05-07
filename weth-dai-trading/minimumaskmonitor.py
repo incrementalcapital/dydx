@@ -215,6 +215,12 @@ async def monitorminimumasks(
             "id": "WETH-DAI"
         }
     }
+    # Display configuration parameters.
+    logger.debug( f'configure "initialminimumprice" to: {initialminimumprice} DAI/ETH.' )
+    logger.debug( f'configure "initialmaximumprice" to: {initialmaximumprice} DAI/ETH.' )
+    logger.debug( f'configure "depreciationtrigger" to: {Decimal(depreciationtrigger)*100:.2f} %.' )
+    logger.debug( f'configure "appreciationtrigger" to: {Decimal(appreciationtrigger)*100:.2f} %.' )
+
     return await monitorminimumaskswebsocket(
         initialminimumprice,
         depreciationtrigger,
