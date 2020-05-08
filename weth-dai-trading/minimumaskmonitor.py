@@ -10,10 +10,6 @@ from credentials import walletaddress
 from logger import logger
 
 
-# Buy ETH to take a position.
-# Upwardly sliding when prices increase.
-# Execute bid when the ask price drops (loop exits).
-# Or execute stop when ETH is too expensive (loop exits).
 async def minimumasksmessagehandler(
         websocket: websockets.WebSocketClientProtocol,
         subscriptionrequest: dict,
