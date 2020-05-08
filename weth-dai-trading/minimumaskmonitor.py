@@ -10,7 +10,7 @@ from credentials import walletaddress
 from logger import logger
 
 
-async def minimumasksmessagehandler(
+async def minimumaskmessagehandler(
         websocket: websockets.WebSocketClientProtocol,
         subscriptionrequest: dict,
         initialminimumprice: str,
@@ -163,7 +163,7 @@ async def channelsubscriptionhandler(
     await websocket.send( requestjson )
 
 
-async def monitorminimumaskswebsocket(
+async def monitorminimumaskwebsocket(
         initialminimumprice: str,
         percentdepreciation: str,
         initialmaximumprice: str,
@@ -182,7 +182,7 @@ async def monitorminimumaskswebsocket(
             logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
             await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
             channelsubscription == True
-        return await minimumasksmessagehandler(
+        return await minimumaskmessagehandler(
             websocket,
             subscriptionrequest,
             initialminimumprice,
@@ -192,7 +192,7 @@ async def monitorminimumaskswebsocket(
         )
 
 
-async def monitorminimumasks(
+async def monitorminimumask(
         initialminimumprice: str,
         depreciationtrigger: str,
         initialmaximumprice: str,
@@ -217,7 +217,7 @@ async def monitorminimumasks(
     logger.debug( f'configure "depreciationtrigger" to: {Decimal(depreciationtrigger)*100:.2f} %.' )
     logger.debug( f'configure "appreciationtrigger" to: {Decimal(appreciationtrigger)*100:.2f} %.' )
 
-    return await monitorminimumaskswebsocket(
+    return await monitorminimumaskwebsocket(
         initialminimumprice,
         depreciationtrigger,
         initialmaximumprice,
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     initialmaximumprice = '0'
     appreciationtrigger = '0.001'
     try:
-        asyncio.run( monitorminimumasks( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
+        asyncio.run( monitorminimumask( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
     except KeyboardInterrupt:
         logger.debug( f'exception: keyboard interuption.' )
     except Exception as e:
