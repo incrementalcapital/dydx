@@ -170,26 +170,35 @@ async def monitorminimumaskwebsocket(
         percentappreciation: str,
         subscriptionrequest: dict
     ) -> None:
-    # Initialize channel requested toggle.
-    # Define the URL of the websocket server.
-    channelsubscription = False
-    url = f'wss://api.dydx.exchange/v1/ws'
-    logger.debug( f'Using websockets library to connect to {url}...' )
 
-    # Connect websocket.
-    async with websockets.connect( url ) as websocket:
-        if not channelsubscription:
-            logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
-            await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
-            channelsubscription == True
-        return await minimumaskmessagehandler(
-            websocket,
-            subscriptionrequest,
-            initialminimumprice,
-            percentdepreciation,
-            initialmaximumprice,
-            percentappreciation
-        )
+    while True:
+        # Initialize channel requested toggle.
+        # Define the URL of the websocket server.
+        channelsubscription = False
+        url = f'wss://api.dydx.exchange/v1/ws'
+        logger.debug( f'Using websockets library to connect to {url}...' )
+
+        # Connect websocket.
+        try:
+            async with websockets.connect( url ) as websocket:
+                if not channelsubscription:
+                    logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
+                    await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
+                    channelsubscription == True
+                return await minimumaskmessagehandler(
+                    websocket,
+                    subscriptionrequest,
+                    initialminimumprice,
+                    percentdepreciation,
+                    initialmaximumprice,
+                    percentappreciation
+                )
+            break
+
+        except websockets.exceptions.ConnectionClosed as e:
+            smsalert( f'the websocket connection dropped.' )
+            logger.debug( f'connection closed with the following exception "{e}".' )
+            logger.debug( f'retrying connection...' )
 
 
 async def monitorminimumask(
@@ -225,24 +234,17 @@ async def monitorminimumask(
         subscriptionstrings
     )
 
+
 if __name__ == "__main__":
     initialminimumprice = '206.13'
     depreciationtrigger = '0.007'
     initialmaximumprice = '0'
     appreciationtrigger = '0.0013'
-    while True:
-        try:
-            asyncio.run( monitorminimumask( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
-            break
-        except KeyboardInterrupt:
-            logger.debug( f'exception: keyboard interuption.' )
-            break
-        except websockets.exceptions.ConnectionClosed as e:
-            smsalert( f'the websocket connection dropped.' )
-            logger.debug( f'connection closed with the following exception "{e}".' )
-            logger.debug( f'retrying connection...' )
-            continue
-        except Exception as e:
-            logger.debug( f'exception: {e}.' )
-            logger.debug( f'exiting...' )
-            exit(1)
+    try:
+        asyncio.run( monitormaximumbid( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
+    except KeyboardInterrupt:
+        logger.debug( f'exception: keyboard interuption.' )
+    except Exception as e:
+        logger.debug( f'exception: {e}.' )
+    logger.debug( f'exiting...' )
+    exit(0)
