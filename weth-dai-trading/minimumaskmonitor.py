@@ -227,14 +227,22 @@ async def monitorminimumask(
 
 if __name__ == "__main__":
     initialminimumprice = '206.13'
-    depreciationtrigger = '0.001'
+    depreciationtrigger = '0.007'
     initialmaximumprice = '0'
-    appreciationtrigger = '0.001'
-    try:
-        asyncio.run( monitorminimumask( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
-    except KeyboardInterrupt:
-        logger.debug( f'exception: keyboard interuption.' )
-    except Exception as e:
-        logger.debug( f'exception: {e}.' )
-    logger.debug( f'exiting...' )
-    exit(0)
+    appreciationtrigger = '0.0013'
+    while True:
+        try:
+            asyncio.run( monitorminimumask( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
+            break
+        except KeyboardInterrupt:
+            logger.debug( f'exception: keyboard interuption.' )
+            break
+        except websockets.exceptions.ConnectionClosed as e:
+            smsalert( f'the websocket connection dropped.' )
+            logger.debug( f'connection closed with the following exception "{e}".' )
+            logger.debug( f'retrying connection...' )
+            continue
+        except Exception as e:
+            logger.debug( f'exception: {e}.' )
+            logger.debug( f'exiting...' )
+            exit(1)
