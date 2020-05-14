@@ -242,7 +242,7 @@ if __name__ == "__main__":
     initialmaximumprice = '0'
     appreciationtrigger = '0.0013'
     try:
-        asyncio.run( monitormaximumbid( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
+        asyncio.run( monitorminimumask( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
     except KeyboardInterrupt:
         logger.debug( f'exception: keyboard interuption.' )
     except Exception as e:
