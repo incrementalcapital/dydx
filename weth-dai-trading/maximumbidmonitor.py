@@ -225,11 +225,12 @@ async def monitormaximumbid(
         subscriptionstrings
     )
 
+
 if __name__ == "__main__":
     initialminimumprice = '206.13'
-    depreciationtrigger = '0.001'
+    depreciationtrigger = '0.007'
     initialmaximumprice = '0'
-    appreciationtrigger = '0.001'
+    appreciationtrigger = '0.0013'
     try:
         asyncio.run( monitormaximumbid( initialminimumprice, depreciationtrigger, initialmaximumprice, appreciationtrigger ) )
     except KeyboardInterrupt:
