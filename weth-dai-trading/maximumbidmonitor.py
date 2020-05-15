@@ -171,26 +171,35 @@ async def monitormaximumbidwebsocket(
         percentappreciation: str,
         subscriptionrequest: dict
     ) -> None:
-    # Initialize channel requested toggle.
-    # Define the URL of the websocket server.
-    channelsubscription = False
-    url = f'wss://api.dydx.exchange/v1/ws'
-    logger.debug( f'Using websockets library to connect to {url}...' )
 
-    # Connect websocket.
-    async with websockets.connect( url ) as websocket:
-        if not channelsubscription:
-            logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
-            await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
-            channelsubscription == True
-        return await maximumbidmessagehandler(
-            websocket,
-            subscriptionrequest,
-            initialminimumprice,
-            percentdepreciation,
-            initialmaximumprice,
-            percentappreciation
-        )
+    while True:
+        # Initialize channel requested toggle.
+        # Define the URL of the websocket server.
+        channelsubscription = False
+        url = f'wss://api.dydx.exchange/v1/ws'
+        logger.debug( f'Using websockets library to connect to {url}...' )
+
+        # Connect websocket.
+        try:
+            async with websockets.connect( url ) as websocket:
+                if not channelsubscription:
+                    logger.debug( f'Sending the following channel subscription request to {url}: {subscriptionrequest["subscribe"]}' )
+                    await channelsubscriptionhandler( websocket, subscriptionrequest["subscribe"] )
+                    channelsubscription == True
+                return await maximumbidmessagehandler(
+                    websocket,
+                    subscriptionrequest,
+                    initialminimumprice,
+                    percentdepreciation,
+                    initialmaximumprice,
+                    percentappreciation
+                )
+            break
+
+        except websockets.exceptions.ConnectionClosed as e:
+            smsalert( f'the websocket connection dropped.' )
+            logger.debug( f'connection closed with the following exception "{e}".' )
+            logger.debug( f'retrying connection...' )
 
 
 async def monitormaximumbid(
