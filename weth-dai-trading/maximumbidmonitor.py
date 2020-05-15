@@ -79,40 +79,41 @@ async def maximumbidmessagehandler(
                     # Display price updates.
                     logger.debug( f'updated information received... [lower price bound / upper price bound : {lowerlimit:.2f}/{upperlimit:.2f} DAI/ETH] the highest bid in the orderbook is: {Decimal(maximumbid):.2f} DAI/ETH [Message ID: {dictionary["message_id"]}].' )
 
-                    # Depreciation Logic
-                    #
-                    # [This logic handles INCREASES in the maximum bid price as long as it does not fall below the depreciation trigger.]
-                    #
                     # Use the following logic if there is an initial minimum price.
-                    # Set the lower exit price to the depreciation trigger price.
-                    # This is calculated once. It is determined in the first update message.
-                    # The maximum bid must rise above this initial minimum price.
-                    # Exit if the maximum bid drops below the upwardly sliding lower limit.
                     if Decimal(initialminimumprice):
-                        if lowerlimit == float("-inf"): lowerlimit = Decimal(maximumbid) * ( 1 - Decimal(percentdepreciation) )
-                        if Decimal(maximumbid) * ( 1 - Decimal(percentdepreciation) ) > Decimal(initialminimumprice):
-                            if Decimal(maximumbid) * ( 1 - Decimal(percentdepreciation) ) < lowerlimit:
+
+                        # Define lagging bid price.
+                        laggingbid = Decimal(maximumbid) * ( 1 - Decimal(percentdepreciation) )
+
+                        # Execute the following when the lagging bid exceeds the initial maximum bid specified.
+                        if laggingbid > Decimal(initialminimumprice):
+
+                            # Increase the lower exit price if the lagging bid continues to increase.
+                            # Otherwise, close the connection if the maximum bid drops below the upwardly sliding lower limit.
+                            if laggingbid < lowerlimit:
                                 logger.debug( f'The highest bid [{Decimal(maximumbid):.2f} DAI/ETH] in the orderbook just dropped below a {Decimal(percentdepreciation)*100:.2f}% margin over the lower price bound [{lowerlimit:.2f} DAI/ETH].' )
                                 killsocket = True
                             else:
-                                lowerlimit = Decimal(maximumbid) * ( 1 - Decimal(percentdepreciation) )
-                    # Appreciation Logic
-                    #
-                    # [This logic handles DECREASES in the maximum bid price as long as it does not rise below the appreciation trigger.]
-                    #
+                                # Set the lower exit price to the depreciation trigger price.
+                                lowerlimit = laggingbid
+
                     # Use the following logic if there is an initial maximum price.
-                    # Set the upper exit price to the appreciation trigger price.
-                    # This is calculated once. It is determined in the first update message.
-                    # The maximum bid must fall below above this initial maximum price.
-                    # Exit if the maximum bid rises above the downwardly sliding upper limit.
                     elif Decimal(initialmaximumprice):
-                        if upperlimit == float("inf"): upperlimit = Decimal(maximumbid) * ( 1 + Decimal(percentappreciation) )
-                        if Decimal(maximumbid) * ( 1 + Decimal(percentappreciation) ) < Decimal(initialmaximumprice):
-                            if Decimal(maximumbid) * ( 1 + Decimal(percentappreciation) ) > upperlimit:
+
+                        # Define leading bid price.
+                        leadingbid = Decimal(maximumbid) * ( 1 + Decimal(percentappreciation) )
+
+                        # Execute the following when the leading bid drops below the initial maximum bid specified.
+                        if leadingbid < Decimal(initialmaximumprice):
+
+                            # Decrease the upper exit price if the lagging bid continues to decrease.
+                            # Otherwise, close the connection if the maximum bid exceeds the downwardly sliding upper limit.
+                            if leadingbid > upperlimit:
                                 logger.debug( f'The highest bid [{Decimal(maximumbid):.2f} DAI/ETH] in the orderbook just exceeded a {percentappreciation*100:.2f}% margin below the upper price bound [{upperlimit:.2f} DAI/ETH].' )
                                 killsocket = True
                             else:
-                                upperlimit = Decimal(maximumbid) * ( 1 + Decimal(percentappreciation) )
+                                upperlimit = leadingbid
+
                     else:
                         # If the desired percentage depreciation is set to zero (FALSE), let the lower exit price remain at negative infinity.
                         # Otherwise (percentdepreciation is TRUE), use any increase in maximum bid to determine a new lower price exit.
