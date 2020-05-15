@@ -8,6 +8,7 @@ from sys import exit
 from credentials import walletaddress
 
 from logger import logger
+from messenger import smsalert
 
 
 async def minimumaskmessagehandler(
